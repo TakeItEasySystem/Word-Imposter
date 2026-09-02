@@ -202,6 +202,7 @@ export class GameManager {
     room.players.forEach((p, idx) => {
       p.answers = { q1: '', q2: '' };
       p.drawing = '';
+      p.isDrawingSubmitted = false;
       p.vote = null;
       p.ready = false;
       if (idx === imposterIndex) {
@@ -318,10 +319,11 @@ export class GameManager {
     const player = room.players.find(p => p.id === socketId);
     if (!player) return;
 
-    player.drawing = drawingData || '';
+    player.drawing = drawingData || player.drawing || '';
+    player.isDrawingSubmitted = true;
     this.emitRoomState(roomCode);
 
-    if (room.state === 'DRAWING' && room.players.every(p => p.drawing)) {
+    if (room.state === 'DRAWING' && room.players.every(p => p.isDrawingSubmitted)) {
       this.clearRoomTimer(room);
       this.startVotingPhase(room);
     }
@@ -662,11 +664,11 @@ export class GameManager {
         isBot: p.isBot,
         hasAnsweredQ1: !!p.answers.q1,
         hasAnsweredQ2: !!p.answers.q2,
-        hasSubmittedDrawing: !!p.drawing,
+        hasSubmittedDrawing: !!p.isDrawingSubmitted,
         hasVoted: !!p.vote,
-        // In VOTING or RESULTS, or when drawings are revealed at 7s during DRAWING, reveal drawings
+        // In DRAWING, VOTING, or RESULTS, reveal drawings
         answers: ['VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state) ? p.answers : (p.id === player.id ? p.answers : null),
-        drawing: (room.drawingsRevealed || ['VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state)) ? p.drawing : (p.id === player.id ? p.drawing : null),
+        drawing: ['DRAWING', 'VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state) ? p.drawing : null,
         vote: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.vote : null,
         role: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.role : (p.id === player.id ? p.role : null),
         assignedWord: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.assignedWord : (p.id === player.id ? p.assignedWord : null)

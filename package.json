@@ -1,0 +1,15 @@
+{
+  "name": "word-imposter-game-root",
+  "version": "1.0.0",
+  "description": "Real-time multiplayer word imposter game with drawing and social deduction",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm --prefix server start\" \"npm --prefix client run dev\"",
+    "server": "npm --prefix server start",
+    "client": "npm --prefix client run dev",
+    "install:all": "npm --prefix server install && npm --prefix client install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -55,17 +55,17 @@ export default function App() {
 
     switch (gameState.state) {
       case 'WORD_REVEAL':
-        return <WordReveal gameState={gameState} />;
+        return <WordReveal key={gameState.state + '_' + gameState.currentRound} gameState={gameState} />;
       case 'QUESTION_1':
       case 'QUESTION_2':
-        return <QuestionPhase gameState={gameState} />;
+        return <QuestionPhase key={gameState.state} gameState={gameState} />;
       case 'DRAWING':
-        return <DrawingPhase gameState={gameState} />;
+        return <DrawingPhase key={gameState.state} gameState={gameState} />;
       case 'VOTING':
-        return <VotingPhase gameState={gameState} />;
+        return <VotingPhase key={gameState.state} gameState={gameState} />;
       case 'RESULTS':
       case 'GAME_OVER':
-        return <Scoreboard gameState={gameState} />;
+        return <Scoreboard key={gameState.state + '_' + gameState.currentRound} gameState={gameState} />;
       default:
         return <Lobby gameState={gameState} />;
     }

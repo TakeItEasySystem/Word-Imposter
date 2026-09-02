@@ -232,10 +232,27 @@ export class GameManager {
     room.state = 'WORD_REVEAL';
     this.emitRoomState(room.code);
 
-    // 10 second countdown for Word Reveal
-    this.startTimer(room, 10, () => {
-      this.startQuestion1(room);
+    // Bots auto-ready
+    room.players.filter(p => p.isBot).forEach(bot => {
+      setTimeout(() => {
+        this.playerReady(room.code, bot.id);
+      }, 1500);
     });
+  }
+
+  playerReady(roomCode, socketId) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'WORD_REVEAL') return;
+    const player = room.players.find(p => p.id === socketId);
+    if (!player) return;
+
+    player.ready = true;
+    this.emitRoomState(roomCode);
+
+    if (room.players.every(p => p.ready)) {
+      this.clearRoomTimer(room);
+      this.startQuestion1(room);
+    }
   }
 
   startQuestion1(room) {
@@ -243,12 +260,7 @@ export class GameManager {
     this.emitRoomState(room.code);
 
     // Handle bot submissions
-    this.scheduleBotAnswers(room, 'q1', 3000, 10000);
-
-    // 35s timer for Question 1
-    this.startTimer(room, 35, () => {
-      this.startQuestion2(room);
-    });
+    this.scheduleBotAnswers(room, 'q1', 2000, 5000);
   }
 
   submitAnswer(roomCode, socketId, questionKey, answer) {
@@ -273,48 +285,21 @@ export class GameManager {
   }
 
   startQuestion2(room) {
-    // Fill empty answers for players who didn't submit Q1
-    room.players.forEach(p => {
-      if (!p.answers.q1) p.answers.q1 = "(Ran out of time)";
-    });
-
     room.state = 'QUESTION_2';
     this.emitRoomState(room.code);
 
-    this.scheduleBotAnswers(room, 'q2', 3000, 10000);
-
-    // 35s timer for Question 2
-    this.startTimer(room, 35, () => {
-      this.startDrawingPhase(room);
-    });
+    // Schedule bot submissions
+    this.scheduleBotAnswers(room, 'q2', 2000, 5000);
   }
 
   startDrawingPhase(room) {
-    // Fill empty answers for players who didn't submit Q2
-    room.players.forEach(p => {
-      if (!p.answers.q2) p.answers.q2 = "(Ran out of time)";
-    });
-
     room.state = 'DRAWING';
     room.drawingsRevealed = false;
     room.drawingElapsed = 0;
     this.emitRoomState(room.code);
 
-    // Schedule bot drawings to complete within 3-5 seconds so they appear when revealed at 7s
+    // Schedule bot drawings to complete within 2-4 seconds
     this.scheduleBotDrawings(room);
-
-    // 20s total timer for Drawing
-    // At 7s (13s left), drawings become visible to all players!
-    this.startTimer(room, 20, () => {
-      this.startVotingPhase(room);
-    }, (secondsLeft) => {
-      // Periodic tick callback: check if 7 seconds have elapsed (13s left)
-      if (secondsLeft === 13 && !room.drawingsRevealed) {
-        room.drawingsRevealed = true;
-        this.io.to(room.code).emit('drawings-revealed');
-        this.emitRoomState(room.code);
-      }
-    });
   }
 
   updateDrawing(roomCode, socketId, drawingData) {
@@ -324,9 +309,7 @@ export class GameManager {
     if (!player) return;
 
     player.drawing = drawingData || '';
-    if (room.drawingsRevealed) {
-      this.emitRoomState(roomCode);
-    }
+    this.emitRoomState(roomCode);
   }
 
   submitDrawing(roomCode, socketId, drawingData) {
@@ -362,11 +345,6 @@ export class GameManager {
 
     // Schedule bot votes
     this.scheduleBotVotes(room);
-
-    // 50s timer for voting
-    this.startTimer(room, 50, () => {
-      this.resolveVotes(room);
-    });
   }
 
   castVote(roomCode, voterSocketId, targetPlayerId) {
@@ -453,17 +431,19 @@ export class GameManager {
     room.roundData.roundScores = roundScores;
     room.state = 'RESULTS';
     this.emitRoomState(room.code);
+  }
 
-    // 15s display for Results before next round or game over
-    this.startTimer(room, 18, () => {
-      if (room.currentRound < room.totalRounds) {
-        room.currentRound++;
-        this.startRound(room);
-      } else {
-        room.state = 'GAME_OVER';
-        this.emitRoomState(room.code);
-      }
-    });
+  nextRound(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'RESULTS') return;
+
+    if (room.currentRound < room.totalRounds) {
+      room.currentRound++;
+      this.startRound(room);
+    } else {
+      room.state = 'GAME_OVER';
+      this.emitRoomState(room.code);
+    }
   }
 
   sendChatMessage(roomCode, socketId, text) {

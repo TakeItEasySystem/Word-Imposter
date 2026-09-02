@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playVote, playPop } from '../utils/audio';
-import { Vote, Clock, CheckCircle2, ZoomIn, X, Users, AlertTriangle } from 'lucide-react';
+import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function VotingPhase({ gameState }) {
@@ -25,6 +25,9 @@ export default function VotingPhase({ gameState }) {
   const q1Text = gameState?.roundData?.questions?.[0] || "Question 1";
   const q2Text = gameState?.roundData?.questions?.[1] || "Question 2";
 
+  const totalPlayers = gameState?.players?.length || 0;
+  const votedCount = gameState?.players?.filter(p => p.hasVoted).length || 0;
+
   return (
     <div className="max-w-6xl mx-auto my-6 px-4 animate-fade-in">
       {/* 3 Candidate Words Banner */}
@@ -45,22 +48,18 @@ export default function VotingPhase({ gameState }) {
               Voting & Investigation Phase
             </h2>
             <p className="text-xs text-slate-400">
-              Inspect everyone's 2 answers and drawing. 3 players have the majority word; 1 has the imposter word!
+              Inspect everyone's 2 answers and drawing. Cast your vote for the Imposter!
             </p>
           </div>
         </div>
 
-        <div className={`flex items-center space-x-2 px-4 py-2 rounded-full border text-sm font-bold shrink-0 ${
-          (gameState?.timerSeconds || 0) <= 15
-            ? 'bg-red-500/20 border-red-500/50 text-red-300 animate-pulse'
-            : 'bg-slate-800 border-slate-700 text-slate-200'
-        }`}>
-          <Clock className="w-4 h-4 text-purple-400" />
-          <span>{gameState?.timerSeconds}s Remaining</span>
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-full border bg-slate-800 border-slate-700 text-slate-200 text-sm font-bold shrink-0">
+          <Users className="w-4 h-4 text-purple-400" />
+          <span>{votedCount} / {totalPlayers} Votes Cast</span>
         </div>
       </div>
 
-      {/* Players Cards Grid (Evidence & Drawings) */}
+      {/* Players Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {gameState?.players?.map((player) => {
           const isMe = player.id === myId;
@@ -94,7 +93,7 @@ export default function VotingPhase({ gameState }) {
                     )}
                   </div>
                   <span className="text-[10px] text-slate-400">
-                    {player.hasVoted ? '✓ Cast Vote' : 'Thinking...'}
+                    {player.hasVoted ? '✓ Vote Submitted' : 'Thinking...'}
                   </span>
                 </div>
               </div>
@@ -171,7 +170,7 @@ export default function VotingPhase({ gameState }) {
                     {isCurrentSelected ? (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Voted Imposter</span>
+                        <span>Vote Cast</span>
                       </>
                     ) : (
                       <>
@@ -187,7 +186,7 @@ export default function VotingPhase({ gameState }) {
         })}
       </div>
 
-      {/* Lightbox / Zoom Modal for Drawings */}
+      {/* Lightbox / Zoom Modal */}
       {zoomDrawing && (
         <div
           onClick={() => setZoomDrawing(null)}

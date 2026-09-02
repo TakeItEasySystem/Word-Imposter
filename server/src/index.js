@@ -111,6 +111,16 @@ io.on('connection', (socket) => {
     gameManager.sendChatMessage(roomCode, socket.id, text);
   });
 
+  // Player Ready
+  socket.on('player-ready', ({ roomCode }) => {
+    gameManager.playerReady(roomCode, socket.id);
+  });
+
+  // Next Round
+  socket.on('next-round', ({ roomCode }) => {
+    gameManager.nextRound(roomCode);
+  });
+
   // Play Again
   socket.on('play-again', ({ roomCode }) => {
     gameManager.playAgain(roomCode);

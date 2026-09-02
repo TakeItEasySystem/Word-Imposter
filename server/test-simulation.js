@@ -64,6 +64,12 @@ async function runTestSimulation() {
   await new Promise((r) => setTimeout(r, 1000));
   console.log('[Test] Phase:', currentState, '| 3 Candidate Words:', candidateWords);
 
+  // Send player-ready for all sockets
+  console.log('[Test] Emitting player-ready for all 4 players...');
+  allSockets.forEach((s) => {
+    s.emit('player-ready', { roomCode });
+  });
+
   // Check roles assigned
   // Wait until QUESTION_1 starts or test submissions
   console.log('[Test] Waiting for Question 1 phase...');

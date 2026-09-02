@@ -95,13 +95,24 @@ export default function Scoreboard({ gameState }) {
           </div>
         </div>
 
-        {/* Next Round Countdown or Game Over CTA */}
-        {!isGameOver && (
-          <div className="mt-6 text-xs text-purple-300 flex items-center justify-center space-x-1.5 font-semibold">
-            <span>Next round starting in {gameState?.timerSeconds}s</span>
-            <ArrowRight className="w-4 h-4 animate-pulse" />
+        {/* Next Round Action Button */}
+        {!isGameOver ? (
+          <div className="mt-6 max-w-xs mx-auto">
+            {isHost ? (
+              <button
+                onClick={() => { playPop(); socket.emit('next-round', { roomCode: gameState.code }); }}
+                className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading font-bold rounded-2xl shadow-xl shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 text-base"
+              >
+                <span>Continue to Next Round</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="p-3 bg-slate-900/80 rounded-2xl border border-slate-700 text-slate-400 text-xs font-semibold animate-pulse">
+                Waiting for Host to start next round...
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

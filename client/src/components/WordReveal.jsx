@@ -1,14 +1,22 @@
-import React, { useEffect } from 'react';
-import { playReveal } from '../utils/audio';
-import { HelpCircle, Clock, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { socket } from '../utils/socket';
+import { playReveal, playPop } from '../utils/audio';
+import { Sparkles, AlertCircle, CheckCircle2, Play, Users } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function WordReveal({ gameState }) {
+  const [isReady, setIsReady] = useState(false);
   const myWord = gameState?.myWord;
+  const isHost = gameState?.hostId === gameState?.myPlayerId;
 
-  useEffect(() => {
-    playReveal();
-  }, []);
+  const handleReady = () => {
+    playPop();
+    setIsReady(true);
+    socket.emit('player-ready', { roomCode: gameState.code });
+  };
+
+  const totalPlayers = gameState?.players?.length || 0;
+  const readyCount = gameState?.players?.filter(p => p.ready).length || 0;
 
   return (
     <div className="max-w-3xl mx-auto my-6 px-4 animate-fade-in">
@@ -22,12 +30,6 @@ export default function WordReveal({ gameState }) {
       {/* Secret Card */}
       <div className="glass-panel-glow rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border border-slate-700">
         
-        {/* Timer Bar */}
-        <div className="inline-flex items-center space-x-2 bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-700 text-xs font-semibold text-slate-300 mb-6">
-          <Clock className="w-4 h-4 text-purple-400 animate-spin" />
-          <span>Game starts in {gameState?.timerSeconds}s</span>
-        </div>
-
         {/* Mystery Role Header */}
         <div className="mb-4">
           <div className="inline-flex p-4 rounded-3xl bg-purple-500/20 border border-purple-500/40 text-purple-300 mb-3 shadow-lg shadow-purple-500/20 animate-bounce-subtle">
@@ -51,16 +53,34 @@ export default function WordReveal({ gameState }) {
         </div>
 
         {/* Blind Identity Rules & Strategic Guidance */}
-        <div className="max-w-lg mx-auto bg-slate-900/80 p-4 rounded-2xl border border-purple-500/30 text-xs sm:text-sm text-slate-300 text-left space-y-2">
+        <div className="max-w-lg mx-auto bg-slate-900/80 p-4 rounded-2xl border border-purple-500/30 text-xs sm:text-sm text-slate-300 text-left space-y-2 mb-6">
           <div className="flex items-start space-x-2.5 text-purple-200">
             <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <strong className="text-amber-300 font-semibold">The Mystery:</strong> One of the 3 words was given to <strong>3 players</strong> (Civilians), and one word was given to only <strong>1 player</strong> (The Imposter).
+              <strong className="text-amber-300 font-semibold">The Mystery:</strong> 3 players received the majority word, and 1 player received the imposter word.
             </div>
           </div>
           <p className="text-slate-400 pl-7 text-xs leading-relaxed">
             Answer the 2 questions and draw your clues. Pay attention to other players' submissions to deduce whether your word is the majority or if <em>you</em> are the secret imposter!
           </p>
+        </div>
+
+        {/* Ready Action Button */}
+        <div className="max-w-md mx-auto">
+          {!isReady ? (
+            <button
+              onClick={handleReady}
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading font-bold rounded-2xl shadow-xl shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-base flex items-center justify-center space-x-2"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              <span>I'm Ready → Start Question 1</span>
+            </button>
+          ) : (
+            <div className="p-4 bg-slate-900/90 rounded-2xl border border-emerald-500/30 text-emerald-300 font-bold text-sm flex items-center justify-center space-x-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span>You are Ready! Waiting for other players ({readyCount}/{totalPlayers})...</span>
+            </div>
+          )}
         </div>
 
       </div>

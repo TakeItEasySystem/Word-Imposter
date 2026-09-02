@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { HelpCircle, Send, CheckCircle2, Clock, Users } from 'lucide-react';
+import { HelpCircle, Send, CheckCircle2, Users } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function QuestionPhase({ gameState }) {
@@ -13,7 +13,12 @@ export default function QuestionPhase({ gameState }) {
   const questionKey = isQ1 ? 'q1' : 'q2';
   const questionText = gameState?.roundData?.questions?.[questionIndex] || "Answer honestly about your word:";
 
-  // Check if player has already submitted from server state
+  // Reset input state whenever phase changes between Q1 and Q2
+  useEffect(() => {
+    setAnswerInput('');
+    setHasSubmitted(false);
+  }, [gameState?.state]);
+
   const myPlayer = gameState?.players?.find(p => p.id === gameState?.myPlayerId);
   const alreadyAnswered = isQ1 ? myPlayer?.hasAnsweredQ1 : myPlayer?.hasAnsweredQ2;
   const submitted = hasSubmitted || alreadyAnswered;
@@ -30,6 +35,9 @@ export default function QuestionPhase({ gameState }) {
     setHasSubmitted(true);
   };
 
+  const totalPlayers = gameState?.players?.length || 0;
+  const answeredCount = gameState?.players?.filter(p => isQ1 ? p.hasAnsweredQ1 : p.hasAnsweredQ2).length || 0;
+
   return (
     <div className="max-w-3xl mx-auto my-6 px-4 animate-fade-in">
       {/* 3 Candidate Words Banner */}
@@ -41,7 +49,7 @@ export default function QuestionPhase({ gameState }) {
 
       <div className="glass-panel-glow rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl relative">
         
-        {/* Phase Header & Timer */}
+        {/* Phase Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
           <div className="flex items-center space-x-2">
             <span className="bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -49,13 +57,9 @@ export default function QuestionPhase({ gameState }) {
             </span>
           </div>
 
-          <div className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold ${
-            (gameState?.timerSeconds || 0) <= 10
-              ? 'bg-red-500/20 border-red-500/40 text-red-300 animate-pulse'
-              : 'bg-slate-800 border-slate-700 text-slate-300'
-          }`}>
-            <Clock className="w-4 h-4 text-purple-400" />
-            <span>{gameState?.timerSeconds}s</span>
+          <div className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full border bg-slate-800 border-slate-700 text-slate-300 text-xs font-bold">
+            <Users className="w-3.5 h-3.5 text-purple-400" />
+            <span>{answeredCount} / {totalPlayers} Submitted</span>
           </div>
         </div>
 
@@ -68,7 +72,7 @@ export default function QuestionPhase({ gameState }) {
             "{questionText}"
           </h2>
           <p className="text-xs text-slate-400 mt-2">
-            Answer carefully based on your secret word (<strong>{gameState?.myWord}</strong>).
+            Type your clue and click <strong>Submit Answer</strong> when ready.
           </p>
         </div>
 
@@ -104,7 +108,7 @@ export default function QuestionPhase({ gameState }) {
             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
             <h3 className="font-heading font-bold text-lg text-emerald-300">Answer Submitted!</h3>
             <p className="text-xs text-slate-400">
-              Waiting for remaining players to finish answering...
+              Waiting for other players ({answeredCount}/{totalPlayers}). Game advances automatically once everyone submits!
             </p>
           </div>
         )}
@@ -124,7 +128,7 @@ export default function QuestionPhase({ gameState }) {
                   className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition ${
                     answered
                       ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                      : 'bg-slate-900 border-slate-800 text-slate-500 animate-pulse'
+                      : 'bg-slate-900 border-slate-800 text-slate-500'
                   }`}
                 >
                   <span>{p.avatar}</span>
@@ -132,7 +136,7 @@ export default function QuestionPhase({ gameState }) {
                   {answered ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   ) : (
-                    <span className="text-[10px] text-slate-500">(writing...)</span>
+                    <span className="text-[10px] text-slate-500">(typing...)</span>
                   )}
                 </div>
               );

@@ -678,9 +678,9 @@ export class GameManager {
         hasAnsweredQ2: !!p.answers.q2,
         hasSubmittedDrawing: !!p.isDrawingSubmitted,
         hasVoted: !!p.vote,
-        // In DRAWING, VOTING, or RESULTS, reveal drawings
+        // In VOTING or RESULTS, reveal all drawings. In DRAWING, keep drawings secret/private to each player.
         answers: ['VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state) ? p.answers : (p.id === player.id ? p.answers : null),
-        drawing: ['DRAWING', 'VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state) ? p.drawing : null,
+        drawing: ['VOTING', 'RESULTS', 'GAME_OVER'].includes(room.state) ? p.drawing : (p.id === player.id ? p.drawing : null),
         vote: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.vote : null,
         role: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.role : (p.id === player.id ? p.role : null),
         assignedWord: ['RESULTS', 'GAME_OVER'].includes(room.state) ? p.assignedWord : (p.id === player.id ? p.assignedWord : null)

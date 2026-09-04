@@ -2,8 +2,35 @@ import { historyManager } from './historyManager.js';
 import { getRandomWordSet } from './wordBank.js';
 
 function getCleanApiKey() {
-  const rawKey = process.env.GEMINI_API_KEY || '';
-  return rawKey.trim().replace(/^["']|["']$/g, '');
+  const candidateNames = [
+    'GEMINI_API_KEY',
+    'GOOGLE_API_KEY',
+    'GEMINI_KEY',
+    'GOOGLE_GEMINI_API_KEY',
+    'VITE_GEMINI_API_KEY',
+    'GEMINI',
+    'API_KEY'
+  ];
+
+  for (const name of candidateNames) {
+    const val = process.env[name];
+    if (val && typeof val === 'string' && val.trim()) {
+      return val.trim().replace(/^["']|["']$/g, '');
+    }
+  }
+
+  // Auto-scan all env variables in case of custom/different naming in Render
+  for (const [k, v] of Object.entries(process.env)) {
+    if (typeof v === 'string') {
+      const clean = v.trim().replace(/^["']|["']$/g, '');
+      if (clean.startsWith('AQ.') || clean.startsWith('AIzaSy')) {
+        console.log(`[AIGenerator] Found Gemini key under env var "${k}"`);
+        return clean;
+      }
+    }
+  }
+
+  return '';
 }
 
 function getAuthHeaders(apiKey) {

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { socket } from '../utils/socket';
 import { playFanfare, playPop } from '../utils/audio';
-import { Trophy, Skull, Shield, Award, ArrowRight, RotateCcw, Check, X } from 'lucide-react';
+import { Trophy, Skull, Shield, Award, ArrowRight, RotateCcw, Check, X, Sparkles, Target } from 'lucide-react';
 
 export default function Scoreboard({ gameState }) {
   const isGameOver = gameState?.state === 'GAME_OVER';
@@ -30,85 +30,90 @@ export default function Scoreboard({ gameState }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-6">
+    <div className="max-w-5xl mx-auto my-6 px-4 animate-fade-in space-y-6">
       
       {/* Imposter Reveal Hero Banner */}
-      <div className={`glass-panel-glow rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border shadow-2xl ${
-        imposterCaught ? 'border-blue-500/50 bg-blue-950/20' : 'border-red-500/50 bg-red-950/20'
+      <div className={`rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border-2 shadow-2xl ${
+        imposterCaught
+          ? 'bg-slate-900/95 border-emerald-500/50 shadow-emerald-500/10'
+          : 'bg-slate-900/95 border-red-500/50 shadow-red-500/10'
       }`}>
-        <div className="inline-block p-4 rounded-3xl bg-slate-900/90 border border-slate-700 shadow-xl mb-3 text-5xl">
+        <div className="flex items-center justify-center space-x-2 mb-2">
+          <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 uppercase px-3 py-1 bg-slate-950 rounded-full border border-slate-800">
+            {isGameOver ? '🏆 TOURNAMENT FINAL STANDINGS' : `ROUND ${gameState.currentRound} RESULTS`}
+          </span>
+        </div>
+
+        <div className="inline-block p-4 rounded-3xl bg-slate-950 border-2 border-slate-700 shadow-2xl mb-3 text-5xl">
           {imposter?.avatar || '🕵️‍♂️'}
         </div>
 
-        <div className="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">
-          {isGameOver ? 'Final Game Results' : `Round ${gameState.currentRound} Results`}
-        </div>
-
-        <h2 className="font-heading font-black text-2xl sm:text-3xl text-white mb-2">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+        <h2 className="font-heading font-black text-2xl sm:text-4xl text-white mb-2">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
             {imposter?.name}
           </span>{' '}
           was the Imposter!
         </h2>
 
-        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider my-2 border">
+        {/* Verdict Badge */}
+        <div className="inline-flex items-center space-x-2 my-2">
           {imposterCaught ? (
-            <span className="text-blue-300 border-blue-500/40 bg-blue-900/40 px-3 py-1 rounded-full flex items-center space-x-1.5">
-              <Shield className="w-4 h-4 text-blue-400" />
+            <span className="text-emerald-300 border-2 border-emerald-500/50 bg-emerald-950/60 px-4 py-1.5 rounded-full font-heading font-black text-xs sm:text-sm uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-emerald-500/20">
+              <Shield className="w-4 h-4 text-emerald-400" />
               <span>Civilians Caught the Imposter!</span>
             </span>
           ) : (
-            <span className="text-red-300 border-red-500/40 bg-red-900/40 px-3 py-1 rounded-full flex items-center space-x-1.5">
+            <span className="text-red-300 border-2 border-red-500/50 bg-red-950/60 px-4 py-1.5 rounded-full font-heading font-black text-xs sm:text-sm uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-red-500/20">
               <Skull className="w-4 h-4 text-red-400" />
-              <span>The Imposter Evaded Detection!</span>
+              <span>The Imposter Fooled Everyone!</span>
             </span>
           )}
         </div>
 
         {/* Word Reveal Comparison Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mt-6">
-          <div className="bg-blue-950/40 border border-blue-500/40 rounded-2xl p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-blue-300 block mb-0.5">
-              Majority Word (3 Players)
+          <div className="bg-slate-950/90 border-2 border-cyan-500/40 rounded-2xl p-3.5 text-center shadow">
+            <span className="text-[10px] font-mono uppercase font-bold text-cyan-400 block mb-0.5">
+              CIVILIANS (3 PLAYERS)
             </span>
-            <span className="font-heading font-bold text-lg text-white">
+            <span className="font-heading font-black text-lg text-white">
               {roundData?.commonWord || '???'}
             </span>
           </div>
 
-          <div className="bg-red-950/40 border border-red-500/40 rounded-2xl p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-red-300 block mb-0.5">
-              Imposter Word (1 Player)
+          <div className="bg-slate-950/90 border-2 border-red-500/40 rounded-2xl p-3.5 text-center shadow">
+            <span className="text-[10px] font-mono uppercase font-bold text-red-400 block mb-0.5">
+              IMPOSTER (1 PLAYER)
             </span>
-            <span className="font-heading font-bold text-lg text-white">
+            <span className="font-heading font-black text-lg text-white">
               {roundData?.imposterWord || '???'}
             </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-              Unassigned Word
+          <div className="bg-slate-950/90 border-2 border-slate-800 rounded-2xl p-3.5 text-center shadow">
+            <span className="text-[10px] font-mono uppercase font-bold text-slate-500 block mb-0.5">
+              UNASSIGNED DECK
             </span>
-            <span className="font-heading font-bold text-lg text-slate-300">
+            <span className="font-heading font-bold text-lg text-slate-400">
               {roundData?.unassignedWord || '???'}
             </span>
           </div>
         </div>
 
-        {/* Next Round Action Button */}
+        {/* Next Round Action CTA */}
         {!isGameOver ? (
-          <div className="mt-6 max-w-xs mx-auto">
+          <div className="mt-6 max-w-sm mx-auto">
             {isHost ? (
               <button
                 onClick={() => { playPop(); socket.emit('next-round', { roomCode: gameState.code }); }}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading font-bold rounded-2xl shadow-xl shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 text-base"
+                className="w-full py-3.5 btn-3d-emerald text-white font-heading font-black rounded-2xl transition flex items-center justify-center space-x-2 text-base tracking-wide"
               >
-                <span>Continue to Next Round</span>
+                <span>CONTINUE TO NEXT ROUND</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             ) : (
-              <div className="p-3 bg-slate-900/80 rounded-2xl border border-slate-700 text-slate-400 text-xs font-semibold animate-pulse">
-                Waiting for Host to start next round...
+              <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-slate-400 text-xs font-mono font-bold animate-pulse">
+                ⏳ Waiting for Host to advance to next round...
               </div>
             )}
           </div>
@@ -117,11 +122,16 @@ export default function Scoreboard({ gameState }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Round Breakdown & Voting Tally */}
-        <div className="glass-panel rounded-3xl p-5 border border-slate-800 space-y-4">
-          <h3 className="font-heading font-bold text-base text-white flex items-center space-x-2">
-            <Award className="w-5 h-5 text-purple-400" />
-            <span>Round Points & Votes</span>
-          </h3>
+        <div className="game-panel rounded-3xl p-5 border-2 border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <h3 className="font-heading font-black text-base text-white flex items-center space-x-2">
+              <Award className="w-5 h-5 text-purple-400" />
+              <span>Round Points & Accusations</span>
+            </h3>
+            <span className="text-[10px] font-mono text-purple-300 font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800">
+              BREAKDOWN
+            </span>
+          </div>
 
           <div className="space-y-2.5">
             {gameState?.players?.map((player) => {
@@ -132,26 +142,30 @@ export default function Scoreboard({ gameState }) {
               return (
                 <div
                   key={player.id}
-                  className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800/80 flex items-center justify-between"
+                  className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 flex items-center justify-between"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="text-2xl">{player.avatar}</div>
-                    <div>
+                  <div className="flex items-center space-x-3 overflow-hidden">
+                    <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-2xl border border-slate-800 shrink-0">
+                      {player.avatar}
+                    </div>
+                    <div className="overflow-hidden">
                       <div className="flex items-center space-x-1.5">
-                        <span className="font-heading font-semibold text-white text-sm">
+                        <span className="font-heading font-bold text-white text-sm truncate">
                           {player.name}
                         </span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                          player.role === 'IMPOSTER' ? 'bg-red-500/30 text-red-300' : 'bg-blue-500/30 text-blue-300'
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold border ${
+                          player.role === 'IMPOSTER'
+                            ? 'bg-red-500/20 border-red-500/40 text-red-300'
+                            : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
                         }`}>
                           {player.role}
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-400 flex items-center space-x-1 mt-0.5">
-                        <span>Voted: <strong>{votedFor ? votedFor.name : 'Nobody'}</strong></span>
+                        <span>Voted: <strong className="text-slate-200">{votedFor ? votedFor.name : 'Nobody'}</strong></span>
                         {player.role === 'CIVILIAN' && (
                           isCorrectCivilianVote ? (
-                            <span className="text-emerald-400 flex items-center text-[10px] font-bold">
+                            <span className="text-emerald-400 flex items-center text-[10px] font-bold font-mono">
                               <Check className="w-3 h-3 ml-1" /> (+100)
                             </span>
                           ) : (
@@ -164,8 +178,8 @@ export default function Scoreboard({ gameState }) {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-sm font-heading font-bold text-emerald-400">
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-mono font-black text-emerald-400">
                       +{roundEarned} pts
                     </div>
                   </div>
@@ -176,42 +190,51 @@ export default function Scoreboard({ gameState }) {
         </div>
 
         {/* Overall Leaderboard Standings */}
-        <div className="glass-panel rounded-3xl p-5 border border-slate-800 space-y-4">
-          <h3 className="font-heading font-bold text-base text-white flex items-center space-x-2">
-            <Trophy className="w-5 h-5 text-amber-400" />
-            <span>Overall Leaderboard</span>
-          </h3>
+        <div className="game-panel rounded-3xl p-5 border-2 border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <h3 className="font-heading font-black text-base text-white flex items-center space-x-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              <span>Overall Leaderboard</span>
+            </h3>
+            <span className="text-[10px] font-mono text-amber-400 font-bold bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
+              STANDINGS
+            </span>
+          </div>
 
           <div className="space-y-2.5">
             {sortedPlayers.map((player, rank) => {
               const medals = ["🥇", "🥈", "🥉"];
+              const isFirst = rank === 0;
+
               return (
                 <div
                   key={player.id}
-                  className={`p-3 rounded-2xl border flex items-center justify-between transition ${
-                    rank === 0
-                      ? 'bg-amber-950/30 border-amber-500/40 shadow-md shadow-amber-500/10'
-                      : 'bg-slate-900/80 border-slate-800/80'
+                  className={`p-3 rounded-2xl border-2 flex items-center justify-between transition ${
+                    isFirst
+                      ? 'bg-amber-950/30 border-amber-500/50 shadow-lg shadow-amber-500/10'
+                      : 'bg-slate-950/80 border-slate-800/80'
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-7 text-center font-heading font-bold text-base">
+                  <div className="flex items-center space-x-3 overflow-hidden">
+                    <div className="w-8 text-center font-heading font-black text-lg shrink-0">
                       {medals[rank] || `#${rank + 1}`}
                     </div>
-                    <div className="text-2xl">{player.avatar}</div>
-                    <div>
-                      <div className="font-heading font-bold text-white text-sm">
+                    <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-2xl border border-slate-800 shrink-0">
+                      {player.avatar}
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="font-heading font-black text-white text-sm truncate">
                         {player.name}
                       </div>
-                      <div className="text-[10px] text-slate-400">
-                        {player.isBot ? '🤖 AI Bot' : 'Human Player'}
+                      <div className="text-[10px] font-mono text-slate-500">
+                        {player.isBot ? '🤖 BOT' : 'PLAYER'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-heading font-black text-lg text-amber-300">
-                      {player.score} <span className="text-xs font-normal text-slate-400">pts</span>
+                  <div className="text-right shrink-0">
+                    <div className="font-mono font-black text-lg text-amber-300">
+                      {player.score} <span className="text-xs font-normal text-slate-500">pts</span>
                     </div>
                   </div>
                 </div>
@@ -223,10 +246,10 @@ export default function Scoreboard({ gameState }) {
           {isGameOver && isHost && (
             <button
               onClick={handlePlayAgain}
-              className="w-full mt-4 py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading font-bold rounded-2xl shadow-xl shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2"
+              className="w-full mt-4 py-3.5 btn-3d-purple text-white font-heading font-black rounded-2xl transition flex items-center justify-center space-x-2 text-base tracking-wide"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Play New Game</span>
+              <RotateCcw className="w-5 h-5" />
+              <span>START NEW GAME</span>
             </button>
           )}
         </div>

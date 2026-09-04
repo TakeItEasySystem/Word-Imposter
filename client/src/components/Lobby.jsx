@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { Users, Crown, Bot, Play, UserPlus, Trash2, Sparkles, Copy, Check } from 'lucide-react';
+import { Users, Play, Copy, Check, Plus, Trash2, Crown, Bot, Sparkles, HelpCircle, Shield, Dice5 } from 'lucide-react';
 
-const AVATARS = ["🦊", "🐼", "🤖", "🚀", "🐯", "🦄", "🐙", "🐸", "🦉", "🦁", "🐲", "🐨"];
+const AVATARS = ['🦊', '🐼', '🤖', '🚀', '🐯', '🦄', '🐙', '🐸', '🦉', '🦁', '🐲', '🐨'];
 
 export default function Lobby({ gameState }) {
-  const [tab, setTab] = useState('create'); // 'create' or 'join'
+  const [tab, setTab] = useState('create');
   const [playerName, setPlayerName] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('🦊');
@@ -89,30 +89,36 @@ export default function Lobby({ gameState }) {
     }
   };
 
+  // -------------------------------------------------------------
   // NOT IN ROOM VIEW (Create / Join Screen)
+  // -------------------------------------------------------------
   if (!isInsideRoom) {
     return (
-      <div className="max-w-md mx-auto my-8 px-4">
+      <div className="max-w-md mx-auto my-8 px-4 animate-fade-in">
+        
+        {/* Game Logo & Intro */}
         <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-3xl shadow-xl shadow-purple-600/30 mb-4 animate-bounce-subtle">
+          <div className="inline-block p-4 bg-[#1e1b4b] border-2 border-purple-500 rounded-3xl shadow-2xl shadow-purple-900/50 mb-4 transform hover:scale-105 transition">
             <span className="text-5xl">🕵️‍♂️</span>
           </div>
-          <h2 className="text-3xl font-heading font-bold text-white tracking-wide">
-            Word Imposter
+          <h2 className="text-4xl font-heading font-black text-white tracking-tight">
+            WORD IMPOSTER
           </h2>
-          <p className="text-slate-400 mt-2 text-sm">
-            3 words on screen. 3 Civilians get one word. 1 Imposter gets another. Can you catch them?
+          <p className="text-slate-400 mt-2 text-xs sm:text-sm font-medium">
+            3 words on screen. 3 Civilians get one word. 1 Imposter gets another. Can you deduce who is lying?
           </p>
         </div>
 
-        <div className="glass-panel p-6 rounded-3xl shadow-2xl border border-slate-700/60">
+        {/* Card Container */}
+        <div className="game-panel-glow p-6 sm:p-8 rounded-3xl shadow-2xl">
+          
           {/* Tabs */}
-          <div className="flex bg-slate-900/80 p-1 rounded-2xl mb-6 border border-slate-800">
+          <div className="flex bg-[#0b0f19] p-1.5 rounded-2xl mb-6 border-2 border-slate-800">
             <button
               onClick={() => { setTab('create'); playPop(); }}
-              className={`flex-1 py-2.5 rounded-xl font-heading font-medium text-sm transition ${
+              className={`flex-1 py-3 rounded-xl font-heading font-bold text-sm transition ${
                 tab === 'create'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  ? 'bg-purple-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -120,9 +126,9 @@ export default function Lobby({ gameState }) {
             </button>
             <button
               onClick={() => { setTab('join'); playPop(); }}
-              className={`flex-1 py-2.5 rounded-xl font-heading font-medium text-sm transition ${
+              className={`flex-1 py-3 rounded-xl font-heading font-bold text-sm transition ${
                 tab === 'join'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  ? 'bg-purple-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -132,21 +138,22 @@ export default function Lobby({ gameState }) {
 
           {/* Form */}
           <form onSubmit={tab === 'create' ? handleCreateRoom : handleJoinRoom} className="space-y-5">
+            
             {/* Avatar Picker */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                Choose Avatar
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Choose Your Avatar:
               </label>
-              <div className="grid grid-cols-6 gap-2 p-2 bg-slate-900/50 rounded-2xl border border-slate-800">
+              <div className="grid grid-cols-6 gap-2 bg-[#0b0f19] p-3 rounded-2xl border-2 border-slate-800">
                 {AVATARS.map((av) => (
                   <button
-                    key={av}
                     type="button"
+                    key={av}
                     onClick={() => { setSelectedAvatar(av); playPop(); }}
-                    className={`h-11 rounded-xl text-2xl flex items-center justify-center transition transform active:scale-95 ${
+                    className={`h-11 rounded-xl text-2xl flex items-center justify-center transition ${
                       selectedAvatar === av
-                        ? 'bg-purple-600/40 border-2 border-purple-400 scale-105 shadow-md shadow-purple-500/20'
-                        : 'hover:bg-slate-800/80 border border-transparent'
+                        ? 'bg-purple-600 scale-110 shadow-md ring-2 ring-purple-400'
+                        : 'hover:bg-slate-800/80'
                     }`}
                   >
                     {av}
@@ -157,108 +164,125 @@ export default function Lobby({ gameState }) {
 
             {/* Nickname Input */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Your Nickname
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Your Nickname:
               </label>
               <input
                 type="text"
-                placeholder="e.g. Detective Holmes"
+                placeholder="e.g. Detective Rishi, Ace, Sherlock"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                maxLength={15}
+                maxLength={16}
                 required
-                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition font-medium"
+                className="w-full bg-[#0b0f19] border-2 border-slate-700 rounded-2xl px-4 py-3.5 text-white font-medium placeholder-slate-500 focus:outline-none focus:border-purple-500 transition text-base"
               />
             </div>
 
-            {/* Room Code Input (Join Tab only) */}
+            {/* Room Code Input (If Join Tab) */}
             {tab === 'join' && (
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Room Code (4 Letters)
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  4-Letter Room Code:
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. WXYZ"
+                  placeholder="e.g. X9K2"
                   value={roomCodeInput}
                   onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                   maxLength={4}
                   required
-                  className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 uppercase tracking-widest text-center font-mono font-bold text-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+                  className="w-full bg-[#0b0f19] border-2 border-purple-500/50 rounded-2xl px-4 py-3.5 text-white font-mono font-bold text-center tracking-widest text-xl placeholder-slate-600 focus:outline-none focus:border-purple-400 transition uppercase"
                 />
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Action 3D Button */}
             <button
               type="submit"
-              className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading font-semibold rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-base flex items-center justify-center space-x-2"
+              className="w-full py-4 text-white font-heading font-black text-lg rounded-2xl btn-3d-purple flex items-center justify-center space-x-2 mt-2"
             >
-              <Sparkles className="w-5 h-5" />
-              <span>{tab === 'create' ? 'Create Lobby' : 'Enter Room'}</span>
+              <span>{tab === 'create' ? 'Create New Lobby 🚀' : 'Enter Lobby 🔑'}</span>
             </button>
           </form>
+
         </div>
       </div>
     );
   }
 
-  // INSIDE LOBBY VIEW
+  // -------------------------------------------------------------
+  // IN LOBBY VIEW (Waiting Room)
+  // -------------------------------------------------------------
   return (
-    <div className="max-w-4xl mx-auto my-6 px-4">
-      {/* Top Banner: Room Code Info */}
-      <div className="glass-panel-glow p-6 rounded-3xl text-center relative overflow-hidden mb-6">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl"></div>
+    <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-6">
+      
+      {/* Lobby Room Header */}
+      <div className="game-panel p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-slate-800">
+        <div className="text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start space-x-2 mb-1">
+            <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+              Lobby Active • Share Code with Friends
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-white">
+            Party Waiting Room
+          </h2>
+        </div>
 
-        <p className="text-slate-400 font-medium text-xs tracking-widest uppercase mb-1">
-          Share this Room Code with friends
-        </p>
-        <div className="inline-flex items-center space-x-4 bg-slate-900/90 px-6 py-2.5 rounded-2xl border border-purple-500/40 my-2">
-          <span className="text-4xl sm:text-5xl font-mono font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-            {gameState.code}
-          </span>
+        {/* Room Code Card */}
+        <div className="flex items-center space-x-3 bg-[#0b0f19] border-2 border-purple-500/60 px-5 py-3 rounded-2xl shadow-xl">
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block leading-none mb-1">
+              ROOM CODE
+            </span>
+            <span className="text-2xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-amber-300 tracking-wider">
+              {gameState.code}
+            </span>
+          </div>
           <button
             onClick={handleCopyCode}
-            className="p-2 bg-purple-600/30 hover:bg-purple-600/50 rounded-xl text-purple-300 transition"
-            title="Copy Code"
+            className="p-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition shadow"
+            title="Copy Code to Clipboard"
           >
-            {copied ? <Check className="w-6 h-6 text-emerald-400" /> : <Copy className="w-6 h-6" />}
+            {copied ? <Check className="w-5 h-5 text-emerald-300" /> : <Copy className="w-5 h-5" />}
           </button>
         </div>
-        <p className="text-xs text-slate-400 mt-2">
-          {playerCount} of 8 players joined {playerCount < 4 ? `(4 recommended)` : ''}
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Player List */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-heading font-bold text-lg text-white flex items-center space-x-2">
+      {/* Main Grid: Players List (Left) + Game Settings (Right) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        
+        {/* Left Column: Player Slots (2 Cols on desktop) */}
+        <div className="md:col-span-2 game-panel p-6 rounded-3xl border-2 border-slate-800 space-y-4">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-purple-400" />
-              <span>Players in Lobby ({playerCount})</span>
-            </h3>
+              <h3 className="font-heading font-bold text-lg text-white">
+                Joined Players ({playerCount}/8)
+              </h3>
+            </div>
 
             {isHost && (
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleAddBot}
-                  disabled={playerCount >= 8}
-                  className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-purple-300 px-3 py-1.5 rounded-xl border border-purple-500/20 transition disabled:opacity-50"
-                  title="Add single AI bot"
+                  className="flex items-center space-x-1.5 btn-3d-slate text-xs text-slate-200 px-3 py-1.5 rounded-xl font-bold"
+                  title="Add 1 AI Demo Bot"
                 >
-                  <Bot className="w-4 h-4" />
-                  <span>+ Add Bot</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Bot</span>
                 </button>
                 {playerCount < 4 && (
                   <button
                     onClick={handleFillBots}
-                    className="flex items-center space-x-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-xs text-purple-300 px-3 py-1.5 rounded-xl border border-purple-500/40 transition font-medium"
-                    title="Quickly fill to 4 players with bots"
+                    className="flex items-center space-x-1.5 btn-3d-purple text-xs text-white px-3 py-1.5 rounded-xl font-bold"
+                    title="Quickly fill to 4 players"
                   >
-                    <Sparkles className="w-4 h-4 text-purple-400" />
-                    <span>Auto-Fill 4</span>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>⚡ Auto-Fill 4</span>
                   </button>
                 )}
               </div>
@@ -272,46 +296,50 @@ export default function Lobby({ gameState }) {
               return (
                 <div
                   key={player.id}
-                  className={`glass-panel p-4 rounded-2xl flex items-center justify-between border transition ${
-                    isMe ? 'border-purple-500/60 bg-purple-950/20' : 'border-slate-800'
+                  className={`p-4 rounded-2xl flex items-center justify-between border-2 transition ${
+                    isMe
+                      ? 'border-purple-500 bg-purple-950/30 shadow-lg'
+                      : 'border-slate-800 bg-[#0b0f19]'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-slate-700/50">
+                    <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-3xl border-2 border-slate-700 shadow-inner">
                       {player.avatar}
                     </div>
                     <div>
                       <div className="flex items-center space-x-1.5">
-                        <span className="font-heading font-semibold text-white text-base">
+                        <span className="font-heading font-bold text-white text-base truncate">
                           {player.name}
                         </span>
                         {isMe && (
-                          <span className="text-[10px] bg-purple-500/30 text-purple-300 font-bold px-1.5 py-0.5 rounded-md">
+                          <span className="text-[10px] bg-purple-500/30 text-purple-300 font-extrabold px-1.5 py-0.2 rounded border border-purple-500/40">
                             YOU
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
+                      <div className="flex items-center space-x-2 text-xs mt-0.5">
                         {player.isHost && (
-                          <span className="flex items-center text-amber-400 font-medium">
+                          <span className="flex items-center text-amber-400 font-bold text-[11px]">
                             <Crown className="w-3.5 h-3.5 mr-1" /> Host
                           </span>
                         )}
                         {player.isBot && (
-                          <span className="flex items-center text-cyan-400 font-medium">
+                          <span className="flex items-center text-cyan-400 font-bold text-[11px]">
                             <Bot className="w-3.5 h-3.5 mr-1" /> AI Player
                           </span>
                         )}
-                        {!player.isHost && !player.isBot && <span>Ready</span>}
+                        {!player.isHost && !player.isBot && (
+                          <span className="text-emerald-400 font-bold text-[11px]">✓ Ready</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Host can kick bots */}
+                  {/* Kick Bot */}
                   {isHost && player.isBot && (
                     <button
                       onClick={() => handleRemoveBot(player.id)}
-                      className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition"
+                      className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-xl transition"
                       title="Remove Bot"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -323,22 +351,24 @@ export default function Lobby({ gameState }) {
           </div>
 
           {playerCount < 3 && (
-            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-300 text-xs flex items-center space-x-2">
-              <span>⚠️ At least 3 players (or bots) are required to start the game!</span>
+            <div className="p-3.5 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl text-amber-300 text-xs font-bold flex items-center space-x-2">
+              <span>⚠️ Need at least 3 players (or bots) to start the game!</span>
             </div>
           )}
         </div>
 
         {/* Right Column: Settings & Host Actions */}
         <div className="space-y-4">
-          <div className="glass-panel p-5 rounded-3xl border border-slate-800 space-y-4">
-            <h3 className="font-heading font-bold text-base text-white">Game Settings</h3>
+          <div className="game-panel p-6 rounded-3xl border-2 border-slate-800 space-y-4">
+            <h3 className="font-heading font-bold text-base text-white border-b border-slate-800 pb-2">
+              Game Settings
+            </h3>
 
             {/* Rounds Selector */}
             <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-400 mb-1.5">
+              <div className="flex justify-between text-xs font-bold text-slate-400 mb-1.5">
                 <span>Rounds to Play:</span>
-                <span className="text-purple-400 font-bold text-sm">{gameState.totalRounds || rounds} Rounds</span>
+                <span className="text-purple-400 font-black text-sm">{gameState.totalRounds || rounds} Rounds</span>
               </div>
               <input
                 type="range"
@@ -350,21 +380,21 @@ export default function Lobby({ gameState }) {
                 onChange={handleRoundsChange}
                 className="w-full accent-purple-500 cursor-pointer disabled:opacity-60"
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                <span>1 Round</span>
-                <span>3 Rounds</span>
-                <span>5 Rounds</span>
+              <div className="flex justify-between text-[10px] font-bold text-slate-500 mt-1">
+                <span>1 Rnd</span>
+                <span>3 Rnds</span>
+                <span>5 Rnds</span>
               </div>
             </div>
 
             {/* AI Theme Selector */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <div className="flex justify-between items-center text-xs font-semibold text-slate-400 mb-1.5">
+            <div className="pt-3 border-t border-slate-800">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-2">
                 <span className="flex items-center space-x-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                   <span>AI Round Theme:</span>
                 </span>
-                <span className="text-purple-300 font-bold text-[11px] bg-purple-950/60 border border-purple-800/40 px-2 py-0.5 rounded-full">
+                <span className="text-purple-300 font-black text-[11px] bg-purple-950 border border-purple-700/50 px-2.5 py-0.5 rounded-full">
                   {gameState.theme || selectedTheme}
                 </span>
               </div>
@@ -374,7 +404,7 @@ export default function Lobby({ gameState }) {
                   <select
                     value={selectedTheme}
                     onChange={(e) => handleThemeChange(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-medium"
+                    className="w-full bg-[#0b0f19] border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 font-semibold"
                   >
                     <option value="Random Mix">🎲 Random Surprise Mix</option>
                     <option value="Gen Z Memes & Internet Lore">💀 Gen Z Memes & Brainrot Lore</option>
@@ -399,11 +429,11 @@ export default function Lobby({ gameState }) {
                         value={customThemeInput}
                         onChange={(e) => setCustomThemeInput(e.target.value)}
                         maxLength={40}
-                        className="flex-1 bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                        className="flex-1 bg-[#0b0f19] border-2 border-purple-500/50 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none"
                       />
                       <button
                         type="submit"
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow"
+                        className="px-3 py-1.5 btn-3d-purple text-white rounded-xl text-xs font-bold"
                       >
                         Set
                       </button>
@@ -411,21 +441,10 @@ export default function Lobby({ gameState }) {
                   )}
                 </div>
               ) : (
-                <div className="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                <div className="p-3 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] text-slate-400">
                   Theme chosen by host: <strong className="text-purple-300">{gameState.theme || 'Random Mix'}</strong>
                 </div>
               )}
-            </div>
-
-            {/* Quick Rules Preview */}
-            <div className="pt-2 border-t border-slate-800/80 text-xs text-slate-400 space-y-2">
-              <p className="font-semibold text-slate-300">Quick Rules:</p>
-              <ul className="list-disc pl-4 space-y-1 text-slate-400">
-                <li>3 words are shown publicly to everyone.</li>
-                <li>3 Civilians get Word A; 1 Imposter gets Word B.</li>
-                <li>Answer 2 questions without blowing your cover!</li>
-                <li>Draw your word on canvas & vote out the imposter.</li>
-              </ul>
             </div>
 
             {/* Start Button */}
@@ -433,18 +452,19 @@ export default function Lobby({ gameState }) {
               <button
                 onClick={handleStartGame}
                 disabled={playerCount < 3}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-slate-700 disabled:to-slate-800 disabled:text-slate-500 text-white font-heading font-bold rounded-2xl shadow-xl shadow-emerald-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 text-lg flex items-center justify-center space-x-2"
+                className="w-full py-4 text-white font-heading font-black rounded-2xl text-lg btn-3d-emerald flex items-center justify-center space-x-2 mt-4"
               >
                 <Play className="w-5 h-5 fill-current" />
-                <span>Start Game</span>
+                <span>START GAME</span>
               </button>
             ) : (
-              <div className="p-4 bg-slate-900/60 rounded-2xl border border-slate-800 text-center text-slate-400 text-sm animate-pulse">
+              <div className="p-4 bg-[#0b0f19] rounded-2xl border-2 border-slate-800 text-center text-slate-400 text-sm font-semibold animate-pulse mt-4">
                 Waiting for host to start the game...
               </div>
             )}
           </div>
         </div>
+
       </div>
     </div>
   );

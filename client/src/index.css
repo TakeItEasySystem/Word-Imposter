@@ -5,42 +5,134 @@
 @layer base {
   body {
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #0b0f19;
+    color: #f1f5f9;
   }
   h1, h2, h3, h4, .font-heading {
-    font-family: 'Fredoka', cursive, sans-serif;
+    font-family: 'Fredoka', 'Outfit', sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #090d16;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #1e293b;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* 🕹️ Tactile Neo-Arcade 3D Buttons */
+.btn-3d-purple {
+  background: linear-gradient(180deg, #9333ea 0%, #7e22ce 100%);
+  border-bottom: 4px solid #581c87;
+  box-shadow: 0 6px 16px -2px rgba(147, 51, 234, 0.4);
+  transition: all 0.12s ease-in-out;
+}
+.btn-3d-purple:hover:not(:disabled) {
+  background: linear-gradient(180deg, #a855f7 0%, #8b5cf6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -2px rgba(147, 51, 234, 0.5);
+}
+.btn-3d-purple:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3);
 }
 
-.glass-panel-glow {
-  background: rgba(30, 41, 59, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+.btn-3d-emerald {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-bottom: 4px solid #065f46;
+  box-shadow: 0 6px 16px -2px rgba(16, 185, 129, 0.4);
+  transition: all 0.12s ease-in-out;
+}
+.btn-3d-emerald:hover:not(:disabled) {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -2px rgba(16, 185, 129, 0.5);
+}
+.btn-3d-emerald:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-3d-red {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  border-bottom: 4px solid #991b1b;
+  box-shadow: 0 6px 16px -2px rgba(239, 68, 68, 0.4);
+  transition: all 0.12s ease-in-out;
+}
+.btn-3d-red:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
+  transform: translateY(-1px);
+}
+.btn-3d-red:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.btn-3d-slate {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-bottom: 4px solid #090d16;
+  transition: all 0.12s ease-in-out;
+}
+.btn-3d-slate:hover:not(:disabled) {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+.btn-3d-slate:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+/* 🎮 High-Contrast Party Game Panels */
+.game-panel {
+  background: #111827;
+  border: 2px solid #1f2937;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.game-panel-glow {
+  background: #111827;
+  border: 2px solid #6b21a8;
+  box-shadow: 0 20px 40px -10px rgba(107, 33, 168, 0.35), 0 0 0 1px rgba(168, 85, 247, 0.2) inset;
+}
+
+.secret-card-box {
+  background: #090d16;
+  border: 2px dashed #9333ea;
+  box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.evidence-card {
+  background: #111827;
+  border: 2px solid #1e293b;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.evidence-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.25);
+}
+
+/* Subtle Animated Ambient Grid */
+.bg-game-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
 .drawing-canvas {

@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GameManager } from './gameManager.js';
+import { checkGeminiStatus } from './aiGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,12 +27,23 @@ const io = new Server(httpServer, {
 
 const gameManager = new GameManager(io);
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', roomsActive: gameManager.rooms.size });
+app.get('/health', async (req, res) => {
+  const gemini = await checkGeminiStatus();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    roomsActive: gameManager.rooms.size,
+    geminiApi: gemini
+  });
+});
+
+app.get('/api/check-ai', async (req, res) => {
+  const gemini = await checkGeminiStatus(true);
+  res.json(gemini);
 });
 
 app.get('*', (req, res, next) => {
-  if (req.path === '/health') return next();
+  if (req.path === '/health' || req.path === '/api/check-ai') return next();
   res.sendFile(path.join(clientDistPath, 'index.html'), (err) => {
     if (err) next();
   });
@@ -139,8 +151,18 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   console.log(`=========================================`);
-  console.log(` Word Imposter Game Server running on port ${PORT}`);
+  console.log(` 🕵️‍♂️ Word Imposter Game Server running on port ${PORT}`);
   console.log(`=========================================`);
+  
+  // Test Gemini API connection on boot
+  const gemini = await checkGeminiStatus();
+  if (gemini.status === 'connected') {
+    console.log(`[AI Engine] ✅ Gemini API connected & operational! Model: ${gemini.workingModel}`);
+  } else if (!gemini.configured) {
+    console.log(`[AI Engine] ℹ️ GEMINI_API_KEY not set. Offline curated 70+ category deck active.`);
+  } else {
+    console.warn(`[AI Engine] ⚠️ Gemini API key provided, but test ping returned: ${gemini.message}`);
+  }
 });

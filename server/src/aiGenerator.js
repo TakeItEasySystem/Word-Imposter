@@ -104,3 +104,59 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
   historyManager.recordUsedWords(fallbackSet.words);
   return fallbackSet;
 }
+
+// Fast health check test for Gemini API connectivity
+let cachedGeminiStatus = null;
+let lastCheckTime = 0;
+
+export async function checkGeminiStatus(force = false) {
+  if (!GEMINI_API_KEY) {
+    return {
+      configured: false,
+      status: 'unconfigured',
+      message: 'GEMINI_API_KEY environment variable is not set. Using curated offline word decks.'
+    };
+  }
+
+  // Cache result for 60 seconds to prevent rate-limits on repeated health pings
+  const now = Date.now();
+  if (!force && cachedGeminiStatus && (now - lastCheckTime < 60000)) {
+    return cachedGeminiStatus;
+  }
+
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Ping. Reply with 'pong'." }] }],
+          generationConfig: { maxOutputTokens: 10 }
+        })
+      });
+
+      if (response.ok) {
+        cachedGeminiStatus = {
+          configured: true,
+          status: 'connected',
+          workingModel: modelName,
+          message: `Gemini API successfully connected & operational with model "${modelName}"!`
+        };
+        lastCheckTime = now;
+        return cachedGeminiStatus;
+      }
+    } catch (err) {
+      // Try next candidate model
+    }
+  }
+
+  cachedGeminiStatus = {
+    configured: true,
+    status: 'error',
+    message: 'GEMINI_API_KEY is set, but all candidate Gemini models failed connection or key is invalid.'
+  };
+  lastCheckTime = now;
+  return cachedGeminiStatus;
+}
+

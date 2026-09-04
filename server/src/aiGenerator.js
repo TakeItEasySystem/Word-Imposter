@@ -1,19 +1,27 @@
 import { historyManager } from './historyManager.js';
 import { getRandomWordSet } from './wordBank.js';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+function getCleanApiKey() {
+  const rawKey = process.env.GEMINI_API_KEY || '';
+  return rawKey.trim().replace(/^["']|["']$/g, '');
+}
 
 const CANDIDATE_MODELS = [
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
+  'gemini-2.5-flash',
   'gemini-1.5-flash',
   'gemini-1.5-flash-latest',
+  'gemini-1.5-pro',
   'gemini-pro'
 ];
 
+let cachedWorkingModel = null;
+
 export async function generateWordTriplet(theme = 'Random Mix') {
+  const apiKey = getCleanApiKey();
+
   // If no Gemini API key is provided, use the offline fallback bank with history tracking
-  if (!GEMINI_API_KEY) {
+  if (!apiKey) {
     console.log(`[AIGenerator] No GEMINI_API_KEY set. Using curated word bank for theme: "${theme}".`);
     const fallbackSet = getRandomWordSet(theme);
     historyManager.recordUsedWords(fallbackSet.words);
@@ -47,9 +55,13 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
   ]
 }`;
 
-  for (const modelName of CANDIDATE_MODELS) {
+  const modelsToTry = cachedWorkingModel 
+    ? [cachedWorkingModel, ...CANDIDATE_MODELS.filter(m => m !== cachedWorkingModel)]
+    : CANDIDATE_MODELS;
+
+  for (const modelName of modelsToTry) {
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -64,14 +76,13 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
 
       if (!response.ok) {
         const errText = await response.text();
-        console.warn(`[AIGenerator] Model ${modelName} returned status ${response.status}: ${errText.substring(0, 150)}`);
-        continue; // Try next model in list
+        console.warn(`[AIGenerator] Model ${modelName} returned status ${response.status}: ${errText.substring(0, 200)}`);
+        continue;
       }
 
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-      // Clean potential markdown wrapper
       const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanedJson);
 
@@ -88,7 +99,7 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
           questions: parsed.questions.slice(0, 2).map(q => String(q).trim())
         };
 
-        // Record words in history manager to avoid future repetition
+        cachedWorkingModel = modelName;
         historyManager.recordUsedWords(result.words);
         console.log(`[AIGenerator] ✨ Model (${modelName}) successfully generated triplet for "${theme}":`, result.words);
         return result;
@@ -105,12 +116,13 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
   return fallbackSet;
 }
 
-// Fast health check test for Gemini API connectivity
+// Fast health check test for Gemini API connectivity with detailed diagnostic feedback
 let cachedGeminiStatus = null;
 let lastCheckTime = 0;
 
 export async function checkGeminiStatus(force = false) {
-  if (!GEMINI_API_KEY) {
+  const apiKey = getCleanApiKey();
+  if (!apiKey) {
     return {
       configured: false,
       status: 'unconfigured',
@@ -118,25 +130,53 @@ export async function checkGeminiStatus(force = false) {
     };
   }
 
-  // Cache result for 60 seconds to prevent rate-limits on repeated health pings
   const now = Date.now();
   if (!force && cachedGeminiStatus && (now - lastCheckTime < 60000)) {
     return cachedGeminiStatus;
   }
 
+  // 1. Diagnostic Step: Check if API key is accepted by Google
+  let diagnosticMessage = '';
+  try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (!listRes.ok) {
+      const errBody = await listRes.text();
+      let parsedErr = {};
+      try { parsedErr = JSON.parse(errBody); } catch (_) {}
+      const googleMessage = parsedErr?.error?.message || errBody.substring(0, 150);
+
+      diagnosticMessage = `Google API returned status ${listRes.status}: ${googleMessage}`;
+      console.warn(`[AI Engine Diagnostic] ${diagnosticMessage}`);
+
+      cachedGeminiStatus = {
+        configured: true,
+        status: 'error',
+        httpStatus: listRes.status,
+        diagnostic: diagnosticMessage,
+        message: `API Key verification failed: ${googleMessage}`
+      };
+      lastCheckTime = now;
+      return cachedGeminiStatus;
+    }
+  } catch (netErr) {
+    console.warn(`[AI Engine Diagnostic] Network error reaching Google API: ${netErr.message}`);
+  }
+
+  // 2. Test generation across candidate models
   for (const modelName of CANDIDATE_MODELS) {
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: "Ping. Reply with 'pong'." }] }],
-          generationConfig: { maxOutputTokens: 10 }
+          contents: [{ parts: [{ text: "Hello" }] }],
+          generationConfig: { maxOutputTokens: 5 }
         })
       });
 
       if (response.ok) {
+        cachedWorkingModel = modelName;
         cachedGeminiStatus = {
           configured: true,
           status: 'connected',
@@ -145,6 +185,9 @@ export async function checkGeminiStatus(force = false) {
         };
         lastCheckTime = now;
         return cachedGeminiStatus;
+      } else {
+        const errText = await response.text();
+        console.warn(`[AI Engine Test] Model ${modelName} test ping returned ${response.status}: ${errText.substring(0, 150)}`);
       }
     } catch (err) {
       // Try next candidate model
@@ -154,7 +197,7 @@ export async function checkGeminiStatus(force = false) {
   cachedGeminiStatus = {
     configured: true,
     status: 'error',
-    message: 'GEMINI_API_KEY is set, but all candidate Gemini models failed connection or key is invalid.'
+    message: diagnosticMessage || 'GEMINI_API_KEY is set, but candidate models failed generation.'
   };
   lastCheckTime = now;
   return cachedGeminiStatus;

@@ -81,6 +81,11 @@ io.on('connection', (socket) => {
     gameManager.updateSettings(roomCode, totalRounds);
   });
 
+  // Update Theme
+  socket.on('update-theme', ({ roomCode, theme }) => {
+    gameManager.updateTheme(roomCode, theme);
+  });
+
   // Start Game
   socket.on('start-game', ({ roomCode }) => {
     gameManager.startGame(roomCode);

@@ -1,4 +1,5 @@
 import { getRandomWordSet } from './wordBank.js';
+import { generateWordTriplet } from './aiGenerator.js';
 
 // Pre-built bot doodle drawings (vector canvas data / sample sketches) so bots can draw
 const BOT_DOODLES = [
@@ -39,6 +40,7 @@ export class GameManager {
       assignedWord: null,
       answers: { q1: '', q2: '' },
       drawing: '',
+      isDrawingSubmitted: false,
       vote: null,
       ready: false
     };
@@ -49,11 +51,14 @@ export class GameManager {
       state: 'LOBBY', // LOBBY, WORD_REVEAL, QUESTION_1, QUESTION_2, DRAWING, VOTING, RESULTS, GAME_OVER
       currentRound: 0,
       totalRounds: 3,
-      timerSeconds: 0,
-      timerInterval: null,
+      theme: 'Random Mix',
       players: [player],
+      chatMessages: [],
       roundData: null,
-      messages: []
+      drawingsRevealed: false,
+      drawingElapsed: 0,
+      timerSeconds: 0,
+      timerInterval: null
     };
 
     this.rooms.set(roomCode, room);
@@ -174,6 +179,13 @@ export class GameManager {
     this.emitRoomState(roomCode);
   }
 
+  updateTheme(roomCode, theme) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'LOBBY') return;
+    room.theme = (theme || 'Random Mix').trim() || 'Random Mix';
+    this.emitRoomState(roomCode);
+  }
+
   startGame(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
@@ -186,8 +198,8 @@ export class GameManager {
     this.startRound(room);
   }
 
-  startRound(room) {
-    const wordSet = getRandomWordSet();
+  async startRound(room) {
+    const wordSet = await generateWordTriplet(room.theme);
     const shuffledWords = [...wordSet.words].sort(() => 0.5 - Math.random());
     
     // Pick Common word (3 players) and Imposter word (1 player)
@@ -680,6 +692,7 @@ export class GameManager {
         state: room.state,
         currentRound: room.currentRound,
         totalRounds: room.totalRounds,
+        theme: room.theme || 'Random Mix',
         timerSeconds: room.timerSeconds,
         drawingsRevealed: !!room.drawingsRevealed,
         messages: room.messages || [],

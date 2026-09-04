@@ -10,8 +10,10 @@ export default function Lobby({ gameState }) {
   const [playerName, setPlayerName] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('🦊');
-  const [copied, setCopied] = useState(false);
   const [rounds, setRounds] = useState(3);
+  const [selectedTheme, setSelectedTheme] = useState('Random Mix');
+  const [customThemeInput, setCustomThemeInput] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const isInsideRoom = !!gameState?.code;
   const isHost = gameState?.hostId === gameState?.myPlayerId;
@@ -33,6 +35,21 @@ export default function Lobby({ gameState }) {
       playerName: playerName.trim(),
       avatar: selectedAvatar
     });
+  };
+
+  const handleThemeChange = (themeName) => {
+    playPop();
+    setSelectedTheme(themeName);
+    if (themeName !== 'Custom') {
+      socket.emit('update-theme', { roomCode: gameState.code, theme: themeName });
+    }
+  };
+
+  const handleCustomThemeSubmit = (e) => {
+    e.preventDefault();
+    if (!customThemeInput.trim()) return;
+    playPop();
+    socket.emit('update-theme', { roomCode: gameState.code, theme: customThemeInput.trim() });
   };
 
   const handleAddBot = () => {
@@ -338,6 +355,61 @@ export default function Lobby({ gameState }) {
                 <span>3 Rounds</span>
                 <span>5 Rounds</span>
               </div>
+            </div>
+
+            {/* AI Theme Selector */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <div className="flex justify-between items-center text-xs font-semibold text-slate-400 mb-1.5">
+                <span className="flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <span>AI Round Theme:</span>
+                </span>
+                <span className="text-purple-300 font-bold text-[11px] bg-purple-950/60 border border-purple-800/40 px-2 py-0.5 rounded-full">
+                  {gameState.theme || selectedTheme}
+                </span>
+              </div>
+
+              {isHost ? (
+                <div className="space-y-2 mt-2">
+                  <select
+                    value={selectedTheme}
+                    onChange={(e) => handleThemeChange(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-medium"
+                  >
+                    <option value="Random Mix">🎲 Random Surprise Mix</option>
+                    <option value="Food & Street Snacks">🍕 Food & Street Snacks</option>
+                    <option value="Cinema & Pop Culture">🎬 Cinema & Pop Culture</option>
+                    <option value="Superheroes & Anime">🦸 Superheroes & Anime</option>
+                    <option value="Sports & Cricket">🏏 Sports & Cricket</option>
+                    <option value="Tech & Gaming">💻 Tech & Gaming</option>
+                    <option value="College & Office Life">🎒 College & Office Life</option>
+                    <option value="Custom">✍️ Custom Theme (Type your own)...</option>
+                  </select>
+
+                  {selectedTheme === 'Custom' && (
+                    <form onSubmit={handleCustomThemeSubmit} className="flex space-x-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder="e.g. Hogwarts, K-Pop, 90s Cars..."
+                        value={customThemeInput}
+                        onChange={(e) => setCustomThemeInput(e.target.value)}
+                        maxLength={40}
+                        className="flex-1 bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow"
+                      >
+                        Set
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ) : (
+                <div className="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                  Theme chosen by host: <strong className="text-purple-300">{gameState.theme || 'Random Mix'}</strong>
+                </div>
+              )}
             </div>
 
             {/* Quick Rules Preview */}

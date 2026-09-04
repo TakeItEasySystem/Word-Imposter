@@ -56,6 +56,11 @@ async function runTestSimulation() {
     });
   });
 
+  // Update Theme
+  console.log('[Test] Host setting theme to: "Food & Street Snacks"...');
+  hostSocket.emit('update-theme', { roomCode, theme: 'Food & Street Snacks' });
+  await new Promise((r) => setTimeout(r, 500));
+
   // Start game
   console.log('[Test] Host starting game...');
   hostSocket.emit('start-game', { roomCode });

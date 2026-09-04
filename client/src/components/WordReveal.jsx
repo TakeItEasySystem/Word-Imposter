@@ -27,56 +27,56 @@ export default function WordReveal({ gameState }) {
       />
 
       {/* Secret Classified Dossier Card */}
-      <div className="case-file-panel-glow rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden shadow-2xl border-2 border-zinc-700">
+      <div className="clean-card rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden shadow-md border-2 border-slate-200">
         
         {/* Top Secret Badge */}
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-black border border-red-500/80 text-red-400 text-xs font-mono font-black uppercase tracking-widest mb-4">
-          <Lock className="w-3.5 h-3.5 text-red-400" />
-          <span>TOP SECRET • CLASSIFIED INTELLIGENCE</span>
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-xs font-mono font-bold uppercase tracking-widest mb-4">
+          <Lock className="w-3.5 h-3.5 text-slate-600" />
+          <span>CONFIDENTIAL ASSIGNMENT</span>
         </div>
 
-        <h2 className="font-heading font-black text-2xl sm:text-3xl tracking-tight text-white">
-          CONFIDENTIAL WORD ASSIGNMENT
+        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl tracking-tight text-slate-900">
+          YOUR SECRET CLUE
         </h2>
-        <p className="text-xs text-zinc-400 mt-1 font-mono">
+        <p className="text-xs text-slate-500 mt-1 font-mono">
           BLIND INVESTIGATION: Nobody in this room knows if they are a Detective or the Imposter!
         </p>
 
         {/* The Secret Word Stamp Box */}
-        <div className="max-w-md mx-auto my-6 bg-black border-2 border-dashed border-white p-6 sm:p-8 rounded-3xl relative shadow-inner">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 block mb-1">
-            ASSIGNED CLUE
+        <div className="max-w-md mx-auto my-6 bg-slate-50 border-2 border-dashed border-slate-400 p-6 sm:p-8 rounded-3xl relative shadow-xs">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 block mb-1">
+            ASSIGNED WORD
           </span>
-          <div className="font-mono font-black text-3xl sm:text-5xl text-white tracking-widest uppercase">
+          <div className="font-mono font-extrabold text-3xl sm:text-5xl text-slate-900 tracking-widest uppercase">
             {myWord || '???'}
           </div>
         </div>
 
         {/* Strategic Guidance Box */}
-        <div className="max-w-lg mx-auto bg-black p-4 sm:p-5 rounded-2xl border-2 border-zinc-800 text-xs text-zinc-300 text-left space-y-2 mb-8 shadow-inner font-mono">
-          <div className="flex items-center space-x-2 text-white font-black">
-            <ShieldAlert className="w-4 h-4 text-white shrink-0" />
-            <span className="uppercase tracking-wider">The Investigation Dilemma:</span>
+        <div className="max-w-lg mx-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs text-slate-700 text-left space-y-2 mb-8 font-mono">
+          <div className="flex items-center space-x-2 text-slate-900 font-bold">
+            <ShieldAlert className="w-4 h-4 text-slate-700 shrink-0" />
+            <span className="uppercase tracking-wider">Investigation Directive:</span>
           </div>
-          <p className="text-zinc-400 pl-6 text-xs leading-relaxed">
+          <p className="text-slate-600 pl-6 text-xs leading-relaxed">
             3 Detectives hold the majority lead. 1 Imposter holds false intel. Drop subtle clues during interrogation and sketching to verify whether your clue matches the majority!
           </p>
         </div>
 
-        {/* Ready Action 3D Button */}
+        {/* Ready Action Button */}
         <div className="max-w-md mx-auto">
           {!isReady ? (
             <button
               onClick={handleReady}
-              className="w-full py-4 rounded-2xl btn-noir-white flex items-center justify-center space-x-2 font-mono font-black text-sm uppercase tracking-wider"
+              className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 font-mono font-bold text-sm uppercase tracking-wider"
             >
               <CheckCircle2 className="w-5 h-5" />
-              <span>CONFIRM DOSSIER → PROCEED TO INTERROGATION</span>
+              <span>CONFIRM CLUE → PROCEED TO INTERROGATION</span>
             </button>
           ) : (
-            <div className="p-4 bg-black rounded-2xl border-2 border-white text-white font-mono font-bold text-sm flex items-center justify-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-white" />
-              <span>Dossier Confirmed. Waiting for all detectives ({readyCount}/{totalPlayers})...</span>
+            <div className="p-4 bg-slate-100 rounded-2xl border-2 border-slate-300 text-slate-800 font-mono font-bold text-sm flex items-center justify-center space-x-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <span>Clue Confirmed. Waiting for all players ({readyCount}/{totalPlayers})...</span>
             </div>
           )}
         </div>

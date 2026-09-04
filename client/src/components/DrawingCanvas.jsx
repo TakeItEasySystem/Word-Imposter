@@ -119,7 +119,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
   return (
     <div className="flex flex-col items-center w-full max-w-lg mx-auto">
       {/* Canvas Container */}
-      <div className="relative w-full aspect-[4/3] bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-zinc-700">
+      <div className="relative w-full aspect-[4/3] bg-white rounded-2xl shadow-md overflow-hidden border-2 border-slate-300">
         <canvas
           ref={canvasRef}
           width={600}
@@ -134,15 +134,15 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
           className="w-full h-full cursor-crosshair drawing-canvas"
         />
         {disabled && (
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center text-white font-mono font-black text-sm uppercase tracking-widest">
-            🔒 EXHIBIT LOCKED & SUBMITTED
+          <div className="absolute inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center text-white font-mono font-bold text-sm uppercase tracking-widest">
+            🔒 DRAWING SUBMITTED & LOCKED
           </div>
         )}
       </div>
 
       {/* Toolbar Controls */}
       {!disabled && (
-        <div className="w-full mt-3 p-3 bg-black rounded-2xl border border-zinc-800 space-y-3 shadow-xl">
+        <div className="w-full mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
           
           {/* Top Row: Palette & Tool Type */}
           <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
@@ -155,19 +155,19 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                   style={{ backgroundColor: c }}
                   className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 transition transform active:scale-90 ${
                     color === c && !isEraser
-                      ? 'border-white scale-110 shadow-md ring-2 ring-white/50'
-                      : 'border-zinc-700 hover:scale-105'
+                      ? 'border-slate-900 scale-110 shadow-sm ring-2 ring-slate-900/30'
+                      : 'border-slate-300 hover:scale-105'
                   }`}
                 />
               ))}
             </div>
 
-            <div className="flex items-center space-x-1 border-l border-zinc-800 pl-2">
+            <div className="flex items-center space-x-1 border-l border-slate-200 pl-2">
               <button
                 type="button"
                 onClick={() => { setIsEraser(false); playPop(); }}
                 className={`p-1.5 rounded-lg border transition ${
-                  !isEraser ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                  !isEraser ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
                 title="Pen / Ink"
               >
@@ -177,7 +177,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                 type="button"
                 onClick={() => { setIsEraser(true); playPop(); }}
                 className={`p-1.5 rounded-lg border transition ${
-                  isEraser ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                  isEraser ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
                 title="Eraser"
               >
@@ -187,10 +187,10 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
           </div>
 
           {/* Bottom Row: Brush Sizes & Undo/Clear */}
-          <div className="flex items-center justify-between pt-1 border-t border-zinc-900 font-mono">
+          <div className="flex items-center justify-between pt-1 border-t border-slate-200 font-mono">
             {/* Brush Sizes */}
             <div className="flex items-center space-x-1.5">
-              <span className="text-[10px] uppercase font-black text-zinc-500 mr-1">Stroke:</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 mr-1">Stroke:</span>
               {SIZES.map((s) => (
                 <button
                   key={s.size}
@@ -198,8 +198,8 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                   onClick={() => { setBrushSize(s.size); playPop(); }}
                   className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
                     brushSize === s.size
-                      ? 'bg-white text-black font-black'
-                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'
+                      ? 'bg-slate-900 text-white font-bold'
+                      : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
                   {s.label}
@@ -213,7 +213,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                 type="button"
                 onClick={handleUndo}
                 disabled={history.length <= 1}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 disabled:opacity-30 text-xs text-zinc-300 transition"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 disabled:opacity-30 text-xs text-slate-700 transition font-bold"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Undo</span>
@@ -221,7 +221,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
               <button
                 type="button"
                 onClick={handleClear}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-red-950 hover:bg-red-900 border border-red-800 text-xs text-red-200 transition"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-xs text-red-600 transition font-bold"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear</span>

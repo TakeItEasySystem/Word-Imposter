@@ -98,33 +98,33 @@ export default function Lobby({ gameState }) {
         
         {/* Game Logo & Intro */}
         <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-black border-2 border-white rounded-3xl shadow-2xl mb-4 transform hover:scale-105 transition">
+          <div className="inline-block p-4 bg-white border-2 border-slate-200 rounded-3xl shadow-md mb-4 transform hover:scale-105 transition">
             <span className="text-5xl">🕵️‍♂️</span>
           </div>
           <div className="flex items-center justify-center space-x-2 mb-1">
-            <span className="text-[10px] font-mono font-black text-red-400 bg-red-950/80 px-2.5 py-0.5 rounded border border-red-800 uppercase tracking-widest">
+            <span className="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
               TOP SECRET DOSSIER
             </span>
           </div>
-          <h2 className="text-4xl font-heading font-black text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
             WORD IMPOSTER
           </h2>
-          <p className="text-zinc-400 mt-2 text-xs sm:text-sm font-mono font-medium">
-            3 Clues on the Evidence Board. 3 Detectives know the true word. 1 Rogue Imposter is bluffing.
+          <p className="text-slate-500 mt-2 text-xs sm:text-sm font-medium">
+            3 Clues on the Board. Detectives share the true word. 1 Imposter is bluffing.
           </p>
         </div>
 
         {/* Card Container */}
-        <div className="case-file-panel p-6 sm:p-8 rounded-3xl shadow-2xl border-2 border-zinc-700">
+        <div className="clean-card p-6 sm:p-8 rounded-3xl shadow-sm border-2 border-slate-200">
           
           {/* Tabs */}
-          <div className="flex bg-black p-1.5 rounded-2xl mb-6 border-2 border-zinc-800 font-mono">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 border border-slate-200 font-mono">
             <button
               onClick={() => { setTab('create'); playPop(); }}
               className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
                 tab === 'create'
-                  ? 'bg-white text-black shadow-lg font-black'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-white text-slate-900 shadow-sm font-extrabold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               Open New Case
@@ -133,8 +133,8 @@ export default function Lobby({ gameState }) {
               onClick={() => { setTab('join'); playPop(); }}
               className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
                 tab === 'join'
-                  ? 'bg-white text-black shadow-lg font-black'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-white text-slate-900 shadow-sm font-extrabold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               Join Case
@@ -146,10 +146,10 @@ export default function Lobby({ gameState }) {
             
             {/* Avatar Picker */}
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 mb-2">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-2">
                 Agent / Suspect Identity:
               </label>
-              <div className="grid grid-cols-6 gap-2 bg-black p-3 rounded-2xl border-2 border-zinc-800">
+              <div className="grid grid-cols-6 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 {AVATARS.map((av) => (
                   <button
                     type="button"
@@ -157,8 +157,8 @@ export default function Lobby({ gameState }) {
                     onClick={() => { setSelectedAvatar(av); playPop(); }}
                     className={`h-11 rounded-xl text-2xl flex items-center justify-center transition ${
                       selectedAvatar === av
-                        ? 'bg-zinc-800 scale-110 shadow-md ring-2 ring-white'
-                        : 'hover:bg-zinc-900'
+                        ? 'bg-white scale-110 shadow-md ring-2 ring-slate-900'
+                        : 'hover:bg-slate-200/60'
                     }`}
                   >
                     {av}
@@ -169,7 +169,7 @@ export default function Lobby({ gameState }) {
 
             {/* Nickname Input */}
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Detective / Suspect Alias:
               </label>
               <input
@@ -179,14 +179,14 @@ export default function Lobby({ gameState }) {
                 onChange={(e) => setPlayerName(e.target.value)}
                 maxLength={16}
                 required
-                className="w-full bg-black border-2 border-zinc-700 rounded-2xl px-4 py-3.5 text-white font-medium placeholder-zinc-600 focus:outline-none focus:border-white transition text-base"
+                className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition text-base"
               />
             </div>
 
             {/* Room Code Input (If Join Tab) */}
             {tab === 'join' && (
               <div>
-                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                   4-Letter Case ID:
                 </label>
                 <input
@@ -196,15 +196,15 @@ export default function Lobby({ gameState }) {
                   onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                   maxLength={4}
                   required
-                  className="w-full bg-black border-2 border-zinc-700 rounded-2xl px-4 py-3.5 text-white font-mono font-black text-center tracking-widest text-xl placeholder-zinc-600 focus:outline-none focus:border-white transition uppercase"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-mono font-extrabold text-center tracking-widest text-xl placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition uppercase"
                 />
               </div>
             )}
 
-            {/* Action 3D Button */}
+            {/* Action Button */}
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl btn-noir-white flex items-center justify-center space-x-2 mt-2 font-mono uppercase tracking-wider text-sm"
+              className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-2 font-mono uppercase tracking-wider text-sm"
             >
               <span>{tab === 'create' ? 'OPEN INVESTIGATION CASE 🔍' : 'ACCESS CASE FILE 📂'}</span>
             </button>
@@ -222,35 +222,35 @@ export default function Lobby({ gameState }) {
     <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-6">
       
       {/* Lobby Room Header */}
-      <div className="case-file-panel p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-zinc-800">
+      <div className="clean-card p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-slate-200 shadow-sm">
         <div className="text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start space-x-2 mb-1">
             <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-red-400">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-red-600">
               PRECINCT BRIEFING • GATHERING DETECTIVES
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-black text-white">
+          <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900">
             Investigation Lineup
           </h2>
         </div>
 
         {/* Room Code Card */}
-        <div className="flex items-center space-x-3 bg-black border-2 border-white px-5 py-3 rounded-2xl shadow-xl">
+        <div className="flex items-center space-x-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-md border border-slate-800">
           <div>
-            <span className="text-[10px] font-mono font-black uppercase text-zinc-400 block leading-none mb-1">
+            <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block leading-none mb-1">
               CASE FILE ID
             </span>
-            <span className="text-2xl font-mono font-black text-white tracking-widest">
+            <span className="text-2xl font-mono font-extrabold text-white tracking-widest">
               #{gameState.code}
             </span>
           </div>
           <button
             onClick={handleCopyCode}
-            className="p-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition border border-zinc-600"
+            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition border border-slate-700"
             title="Copy Case Code"
           >
-            {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+            {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-slate-300" />}
           </button>
         </div>
       </div>
@@ -259,13 +259,13 @@ export default function Lobby({ gameState }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         
         {/* Left Column: Player Slots */}
-        <div className="md:col-span-2 case-file-panel p-6 rounded-3xl border-2 border-zinc-800 space-y-4">
+        <div className="md:col-span-2 clean-card p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
           
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-white" />
-              <h3 className="font-heading font-black text-lg text-white">
+              <Users className="w-5 h-5 text-slate-900" />
+              <h3 className="font-heading font-bold text-lg text-slate-900">
                 Suspect Lineup ({playerCount}/8)
               </h3>
             </div>
@@ -274,7 +274,7 @@ export default function Lobby({ gameState }) {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleAddBot}
-                  className="flex items-center space-x-1.5 btn-noir-dark text-xs text-white px-3 py-1.5 rounded-xl font-mono font-bold"
+                  className="flex items-center space-x-1.5 btn-secondary-light text-xs px-3 py-1.5 rounded-xl font-mono font-bold"
                   title="Add 1 AI Suspect"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -283,7 +283,7 @@ export default function Lobby({ gameState }) {
                 {playerCount < 4 && (
                   <button
                     onClick={handleFillBots}
-                    className="flex items-center space-x-1.5 btn-noir-white text-xs px-3 py-1.5 rounded-xl font-mono font-black"
+                    className="flex items-center space-x-1.5 btn-primary-dark text-xs px-3 py-1.5 rounded-xl font-mono font-bold"
                     title="Fill squad to 4 players"
                   >
                     <span>⚡ Fill Squad 4</span>
@@ -302,38 +302,38 @@ export default function Lobby({ gameState }) {
                   key={player.id}
                   className={`p-4 rounded-2xl flex items-center justify-between border-2 transition ${
                     isMe
-                      ? 'border-white bg-zinc-900 shadow-xl'
-                      : 'border-zinc-800 bg-black'
+                      ? 'border-slate-900 bg-white shadow-md'
+                      : 'border-slate-200 bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-zinc-950 rounded-2xl flex items-center justify-center text-3xl border-2 border-zinc-700 shadow-inner">
+                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl border border-slate-200 shadow-inner">
                       {player.avatar}
                     </div>
                     <div>
                       <div className="flex items-center space-x-1.5">
-                        <span className="font-heading font-bold text-white text-base truncate">
+                        <span className="font-heading font-bold text-slate-900 text-base truncate">
                           {player.name}
                         </span>
                         {isMe && (
-                          <span className="text-[9px] font-mono bg-white text-black font-black px-1.5 py-0.2 rounded">
+                          <span className="text-[9px] font-mono bg-slate-900 text-white font-bold px-1.5 py-0.2 rounded">
                             YOU
                           </span>
                         )}
                       </div>
                       <div className="flex items-center space-x-2 text-xs mt-0.5 font-mono">
                         {player.isHost && (
-                          <span className="flex items-center text-white font-bold text-[11px]">
-                            <Crown className="w-3.5 h-3.5 mr-1" /> Lead Detective
+                          <span className="flex items-center text-amber-600 font-bold text-[11px]">
+                            <Crown className="w-3.5 h-3.5 mr-1 text-amber-500" /> Lead Detective
                           </span>
                         )}
                         {player.isBot && (
-                          <span className="flex items-center text-zinc-400 font-bold text-[11px]">
+                          <span className="flex items-center text-slate-500 font-bold text-[11px]">
                             <Bot className="w-3.5 h-3.5 mr-1" /> AI Suspect
                           </span>
                         )}
                         {!player.isHost && !player.isBot && (
-                          <span className="text-zinc-300 font-bold text-[11px]">✓ Ready</span>
+                          <span className="text-slate-600 font-bold text-[11px]">✓ Ready</span>
                         )}
                       </div>
                     </div>
@@ -343,7 +343,7 @@ export default function Lobby({ gameState }) {
                   {isHost && player.isBot && (
                     <button
                       onClick={() => handleRemoveBot(player.id)}
-                      className="p-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded-xl transition"
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-xl transition"
                       title="Dismiss Bot"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -355,24 +355,24 @@ export default function Lobby({ gameState }) {
           </div>
 
           {playerCount < 3 && (
-            <div className="p-3.5 bg-red-950/40 border-2 border-red-500/40 rounded-2xl text-red-300 text-xs font-mono font-bold flex items-center space-x-2">
-              <span>⚠️ Need at least 3 detectives/suspects to open investigation!</span>
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-mono font-bold flex items-center space-x-2">
+              <span>⚠️ Need at least 3 detectives/suspects to start investigation!</span>
             </div>
           )}
         </div>
 
         {/* Right Column: Case Settings */}
         <div className="space-y-4">
-          <div className="case-file-panel p-6 rounded-3xl border-2 border-zinc-800 space-y-4">
-            <h3 className="font-heading font-black text-base text-white border-b border-zinc-800 pb-2">
+          <div className="clean-card p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-heading font-bold text-base text-slate-900 border-b border-slate-100 pb-2">
               Investigation Parameters
             </h3>
 
             {/* Rounds Selector */}
             <div>
-              <div className="flex justify-between text-xs font-mono font-bold text-zinc-400 mb-1.5">
+              <div className="flex justify-between text-xs font-mono font-bold text-slate-600 mb-1.5">
                 <span>Rounds:</span>
-                <span className="text-white font-black text-sm">{gameState.totalRounds || rounds} Rounds</span>
+                <span className="text-slate-900 font-extrabold text-sm">{gameState.totalRounds || rounds} Rounds</span>
               </div>
               <input
                 type="range"
@@ -382,9 +382,9 @@ export default function Lobby({ gameState }) {
                 disabled={!isHost}
                 value={gameState.totalRounds || rounds}
                 onChange={handleRoundsChange}
-                className="w-full accent-white cursor-pointer disabled:opacity-60"
+                className="w-full accent-slate-900 cursor-pointer disabled:opacity-60"
               />
-              <div className="flex justify-between text-[10px] font-mono font-bold text-zinc-500 mt-1">
+              <div className="flex justify-between text-[10px] font-mono font-bold text-slate-400 mt-1">
                 <span>1 Rnd</span>
                 <span>3 Rnds</span>
                 <span>5 Rnds</span>
@@ -392,13 +392,13 @@ export default function Lobby({ gameState }) {
             </div>
 
             {/* Theme Selector */}
-            <div className="pt-3 border-t border-zinc-800">
-              <div className="flex justify-between items-center text-xs font-mono font-bold text-zinc-300 mb-2">
+            <div className="pt-3 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs font-mono font-bold text-slate-700 mb-2">
                 <span className="flex items-center space-x-1.5">
-                  <Search className="w-3.5 h-3.5 text-zinc-400" />
+                  <Search className="w-3.5 h-3.5 text-slate-400" />
                   <span>Case Category:</span>
                 </span>
-                <span className="text-white font-mono font-black text-[10px] bg-zinc-900 border border-zinc-700 px-2.5 py-0.5 rounded-full">
+                <span className="text-slate-900 font-mono font-bold text-[10px] bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
                   {gameState.theme || selectedTheme}
                 </span>
               </div>
@@ -408,7 +408,7 @@ export default function Lobby({ gameState }) {
                   <select
                     value={selectedTheme}
                     onChange={(e) => handleThemeChange(e.target.value)}
-                    className="w-full bg-black border-2 border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-white font-mono font-semibold"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono font-semibold shadow-xs"
                   >
                     <option value="Random Mix">🎲 Random Surprise Mix</option>
                     <option value="Gen Z Memes & Internet Lore">💀 Gen Z Memes & Brainrot Lore</option>
@@ -433,11 +433,11 @@ export default function Lobby({ gameState }) {
                         value={customThemeInput}
                         onChange={(e) => setCustomThemeInput(e.target.value)}
                         maxLength={40}
-                        className="flex-1 bg-black border-2 border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white font-mono"
+                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 font-mono"
                       />
                       <button
                         type="submit"
-                        className="px-3 py-1.5 btn-noir-white text-xs font-mono font-black rounded-xl"
+                        className="px-3 py-1.5 btn-primary-dark text-xs font-mono font-bold rounded-xl"
                       >
                         Set
                       </button>
@@ -445,8 +445,8 @@ export default function Lobby({ gameState }) {
                   )}
                 </div>
               ) : (
-                <div className="p-3 bg-black rounded-xl border border-zinc-800 text-[11px] font-mono text-zinc-400">
-                  Topic set by Lead Detective: <strong className="text-white">{gameState.theme || 'Random Mix'}</strong>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-600">
+                  Topic set by Lead Detective: <strong className="text-slate-900">{gameState.theme || 'Random Mix'}</strong>
                 </div>
               )}
             </div>
@@ -456,13 +456,13 @@ export default function Lobby({ gameState }) {
               <button
                 onClick={handleStartGame}
                 disabled={playerCount < 3}
-                className="w-full py-4 rounded-2xl btn-noir-white flex items-center justify-center space-x-2 mt-4 font-mono font-black text-sm uppercase tracking-wider"
+                className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-4 font-mono font-bold text-sm uppercase tracking-wider"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>BEGIN INVESTIGATION</span>
               </button>
             ) : (
-              <div className="p-4 bg-black rounded-2xl border-2 border-zinc-800 text-center text-zinc-400 text-xs font-mono font-bold animate-pulse mt-4">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-slate-500 text-xs font-mono font-bold animate-pulse mt-4">
                 Waiting for Lead Detective to start...
               </div>
             )}

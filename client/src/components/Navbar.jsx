@@ -20,25 +20,25 @@ export default function Navbar({ gameState, onOpenRules }) {
   };
 
   return (
-    <header className="w-full bg-[#09090b] border-b-2 border-zinc-800 px-4 py-3 sticky top-0 z-50 shadow-2xl">
+    <header className="w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 sticky top-0 z-50 shadow-sm">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         
-        {/* Bureau Logo & Case File Title */}
+        {/* Logo & Game Title */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-black border-2 border-white flex items-center justify-center text-xl shadow-md text-white font-mono font-bold">
+          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl shadow-md font-mono font-bold">
             🕵️
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-[9px] font-mono font-black text-red-400 bg-red-950/80 px-1.5 py-0.2 rounded border border-red-800 uppercase tracking-widest">
-                CLASSIFIED
+              <span className="text-[9px] font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 uppercase tracking-wider">
+                CONFIDENTIAL
               </span>
             </div>
-            <h1 className="font-heading text-lg sm:text-xl font-black tracking-wide text-white leading-tight">
+            <h1 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-slate-900 leading-tight">
               WORD IMPOSTER
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 hidden sm:block">
-              CRIME EVIDENCE BOARD • 3 CLUES • 1 ROGUE SUSPECT
+            <p className="text-[10px] font-mono uppercase tracking-wider text-slate-500 hidden sm:block">
+              DETECTIVE EVIDENCE BOARD • 3 CLUES • 1 ROGUE SUSPECT
             </p>
           </div>
         </div>
@@ -49,36 +49,36 @@ export default function Navbar({ gameState, onOpenRules }) {
             <button
               onClick={handleCopyCode}
               title="Click to copy case file code"
-              className="flex items-center space-x-2 bg-black hover:bg-zinc-900 text-zinc-200 px-3 py-1.5 rounded-xl border border-zinc-700 transition font-mono text-xs sm:text-sm font-bold active:scale-95"
+              className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 transition font-mono text-xs sm:text-sm font-bold active:scale-95"
             >
-              <span className="text-zinc-500">CASE:</span>
-              <span className="text-white font-black">#{gameState.code}</span>
-              {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 text-zinc-400" />}
+              <span className="text-slate-500">CASE:</span>
+              <span className="text-slate-900 font-extrabold">#{gameState.code}</span>
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
             </button>
 
             {gameState.state !== 'LOBBY' && (
-              <div className="bg-zinc-900 border border-zinc-700 text-white px-3 py-1.5 rounded-xl text-xs font-mono font-bold shrink-0">
+              <div className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-mono font-bold shrink-0 shadow-sm">
                 ROUND {gameState.currentRound}/{gameState.totalRounds}
               </div>
             )}
           </div>
         )}
 
-        {/* Bureau Controls */}
+        {/* Action Controls */}
         <div className="flex items-center space-x-2">
           <button
             onClick={onOpenRules}
-            className="p-2 text-zinc-400 hover:text-white bg-black hover:bg-zinc-900 rounded-xl transition border border-zinc-800 active:scale-90"
-            title="Bureau Protocol (Rules)"
+            className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300 active:scale-90 shadow-sm"
+            title="Investigation Rules"
           >
             <HelpCircle className="w-5 h-5" />
           </button>
           <button
             onClick={handleToggleSound}
-            className="p-2 text-zinc-400 hover:text-white bg-black hover:bg-zinc-900 rounded-xl transition border border-zinc-800 active:scale-90"
-            title={muted ? "Unmute Audio Wire" : "Mute Audio Wire"}
+            className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300 active:scale-90 shadow-sm"
+            title={muted ? "Unmute Audio" : "Mute Audio"}
           >
-            {muted ? <VolumeX className="w-5 h-5 text-red-500" /> : <Volume2 className="w-5 h-5 text-white" />}
+            {muted ? <VolumeX className="w-5 h-5 text-red-500" /> : <Volume2 className="w-5 h-5 text-slate-800" />}
           </button>
         </div>
 

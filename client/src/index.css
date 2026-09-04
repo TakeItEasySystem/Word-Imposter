@@ -5,8 +5,9 @@
 @layer base {
   body {
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #050505;
-    color: #f4f4f5;
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, .font-heading {
     font-family: 'Fredoka', 'Outfit', sans-serif;
@@ -17,134 +18,105 @@
   }
 }
 
-/* Noir Custom scrollbars */
+/* Custom Light Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #cbd5e1;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #94a3b8;
 }
 
-/* 🕵️‍♂️ Detective Noir Tactile 3D Buttons (Black, White & Stark Stamped Red) */
-.btn-noir-white {
-  background: #ffffff;
-  color: #000000;
-  border: 2px solid #e4e4e7;
-  border-bottom: 5px solid #a1a1aa;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
-  font-weight: 900;
-  transition: all 0.12s ease-in-out;
-}
-.btn-noir-white:hover:not(:disabled) {
-  background: #f4f4f5;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(255, 255, 255, 0.15);
-}
-.btn-noir-white:active:not(:disabled) {
-  transform: translateY(3px);
-  border-bottom-width: 2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.btn-noir-dark {
-  background: #121214;
+/* 🌟 Clean Modern Light Action Buttons */
+.btn-primary-dark {
+  background: #0f172a;
   color: #ffffff;
-  border: 2px solid #27272a;
-  border-bottom: 5px solid #000000;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+  border: 2px solid #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
   font-weight: 800;
-  transition: all 0.12s ease-in-out;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn-noir-dark:hover:not(:disabled) {
-  background: #18181b;
-  border-color: #52525b;
+.btn-primary-dark:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #1e293b;
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
 }
-.btn-noir-dark:active:not(:disabled) {
-  transform: translateY(3px);
-  border-bottom-width: 2px;
+.btn-primary-dark:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
 }
 
-.btn-noir-danger {
-  background: #991b1b;
+.btn-secondary-light {
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-weight: 700;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-secondary-light:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.btn-secondary-light:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-danger-action {
+  background: #ef4444;
   color: #ffffff;
   border: 2px solid #ef4444;
-  border-bottom: 5px solid #450a0a;
-  box-shadow: 0 6px 14px rgba(153, 27, 27, 0.4);
-  font-weight: 900;
-  transition: all 0.12s ease-in-out;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  font-weight: 800;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn-noir-danger:hover:not(:disabled) {
+.btn-danger-action:hover:not(:disabled) {
   background: #dc2626;
+  border-color: #dc2626;
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
 }
-.btn-noir-danger:active:not(:disabled) {
-  transform: translateY(3px);
-  border-bottom-width: 2px;
-}
-
-/* 📁 Case File & Classified Dossier Panels */
-.case-file-panel {
-  background: #09090b;
-  border: 2px solid #27272a;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+.btn-danger-action:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
-.case-file-panel-glow {
-  background: #09090b;
-  border: 2px solid #ffffff;
-  box-shadow: 0 20px 40px -10px rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+/* 📁 Clean White Cards & Panels */
+.clean-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
 }
 
-.dossier-card {
-  background: #101014;
-  border: 2px solid #27272a;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8);
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.dossier-card:hover {
-  border-color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 15px 30px -5px rgba(255, 255, 255, 0.1);
+.clean-card-glow {
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.12);
 }
 
-.classified-stamp-red {
-  border: 2px dashed #ef4444;
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.08);
-  font-family: ui-monospace, monospace;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+.clean-card-subtle {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
 }
 
-.classified-stamp-white {
-  border: 2px dashed #ffffff;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
-  font-family: ui-monospace, monospace;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-/* Subtle Noir Ambient Grid */
-.bg-noir-grid {
-  background-size: 32px 32px;
+/* Subtle Clean Light Grid Background */
+.bg-light-grid {
+  background-size: 28px 28px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    radial-gradient(circle, #cbd5e1 1px, transparent 1px);
 }
 
 .drawing-canvas {
   touch-action: none;
 }
+
 

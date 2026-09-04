@@ -377,12 +377,17 @@ export default function Lobby({ gameState }) {
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-medium"
                   >
                     <option value="Random Mix">🎲 Random Surprise Mix</option>
+                    <option value="Gen Z Memes & Internet Lore">💀 Gen Z Memes & Brainrot Lore</option>
+                    <option value="Gen Z Slang & Dating">💬 Gen Z Slang & Situationships</option>
+                    <option value="Social Media & Screen Time">📱 Social Media & Screen Addiction</option>
+                    <option value="College & Late Night Life">🍕 College & Late Night 2 AM Life</option>
+                    <option value="Streamers & Content Creators">🔥 Streamers, YouTubers & Influencers</option>
+                    <option value="Pop & Music Icons">🎵 Viral Music & Pop/Hip-Hop Icons</option>
                     <option value="Food & Street Snacks">🍕 Food & Street Snacks</option>
                     <option value="Cinema & Pop Culture">🎬 Cinema & Pop Culture</option>
                     <option value="Superheroes & Anime">🦸 Superheroes & Anime</option>
                     <option value="Sports & Cricket">🏏 Sports & Cricket</option>
                     <option value="Tech & Gaming">💻 Tech & Gaming</option>
-                    <option value="College & Office Life">🎒 College & Office Life</option>
                     <option value="Custom">✍️ Custom Theme (Type your own)...</option>
                   </select>
 

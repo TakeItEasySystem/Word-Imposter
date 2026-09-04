@@ -1,5 +1,189 @@
 export const WORD_SETS = [
   // -------------------------------------------------------------
+  // 💀 GEN Z, INTERNET MEMES & BRAINROT LORE
+  // -------------------------------------------------------------
+  {
+    category: "Gen Z Memes & Internet Lore",
+    words: ["GigaChad", "Sigma Male", "Skibidi"],
+    questions: [
+      "What extreme jawline, phonk music, or chaotic meme sound is associated with this?",
+      "Would you describe this character as peak masculine perfection, mysterious lone wolf, or pure brainrot?"
+    ]
+  },
+  {
+    category: "Gen Z Memes & Internet Lore",
+    words: ["Rickroll", "Distracted Boyfriend", "Woman Yelling at Cat"],
+    questions: [
+      "What classic 80s music link or pointing photo format made this the most viral meme in history?",
+      "How would someone feel if they clicked an innocent link and got hit with this unexpectedly?"
+    ]
+  },
+  {
+    category: "Gen Z Memes & Internet Lore",
+    words: ["NPC Behavior", "Main Character Energy", "Side Quest"],
+    questions: [
+      "Is this person standing in the background repeating dialogue, or doing the most dramatic thing in public?",
+      "What video game terminology or aura describes this strange social situation?"
+    ]
+  },
+  {
+    category: "Gen Z Memes & Internet Lore",
+    words: ["Dogecoin (Shiba Inu)", "Pepe the Frog", "Cheems / Swole Doge"],
+    questions: [
+      "What meme crypto coin or classic green/golden animal face represents this icon?",
+      "Is this meme used to show crying helplessness, supreme confidence, or stonks going up?"
+    ]
+  },
+
+  // -------------------------------------------------------------
+  // 💬 SLANG, RIZZ & DATING DYNAMICS
+  // -------------------------------------------------------------
+  {
+    category: "Gen Z Slang & Dating",
+    words: ["Rizz", "Delulu", "No Cap"],
+    questions: [
+      "Is this used to describe flirting charm, delusional daydreaming, or 100% honesty?",
+      "In what sentence would you say someone has an 'unspoken' amount of this?"
+    ]
+  },
+  {
+    category: "Gen Z Slang & Dating",
+    words: ["Ghosting", "Love Bombing", "Breadcrumbing"],
+    questions: [
+      "Does this toxic dating behavior involve vanishing into thin air, showering gifts, or leaving tiny clues?",
+      "How does someone feel after waiting 3 weeks for a text reply from this person?"
+    ]
+  },
+  {
+    category: "Gen Z Slang & Dating",
+    words: ["Red Flag", "Beige Flag", "Green Flag"],
+    questions: [
+      "What colored warning sign or healthy habit does your best friend look for on the first date?",
+      "Would this personality trait make someone run away screaming or immediately plan a wedding?"
+    ]
+  },
+  {
+    category: "Gen Z Slang & Dating",
+    words: ["Situationship", "Talking Stage", "Hard Launch (Instagram)"],
+    questions: [
+      "Are you officially dating, confusingly attached without a label, or posting a photo holding hands?",
+      "How awkward is it explaining this relationship status to your parents?"
+    ]
+  },
+
+  // -------------------------------------------------------------
+  // 📱 SOCIAL MEDIA & SCREEN ADDICTION
+  // -------------------------------------------------------------
+  {
+    category: "Social Media & Screen Time",
+    words: ["Doomscrolling", "Finsta / Spam Account", "Snap Streak"],
+    questions: [
+      "What addictive screen habit keeps someone awake in bed until 4:30 AM?",
+      "What hourglass emoji or private photo dump is at risk if you forget to open this today?"
+    ]
+  },
+  {
+    category: "Social Media & Screen Time",
+    words: ["BeReal Notification", "TikTok FYP Algorithm", "Instagram Close Friends Story"],
+    questions: [
+      "What 2-minute timer, green circle, or hyper-specific video feed pops up on your lock screen?",
+      "Who is allowed to see the unhinged selfies you post on this feature?"
+    ]
+  },
+  {
+    category: "Social Media & Screen Time",
+    words: ["Overthinking at 3 AM", "Leaving on Read", "AirPods on Transparency Mode"],
+    questions: [
+      "Does this involve staring at blue checkmarks, playing sad songs, or pretending to listen to a conversation?",
+      "What level of social anxiety or late-night regret does this cause?"
+    ]
+  },
+
+  // -------------------------------------------------------------
+  // 🍕 LATE NIGHT COLLEGE & HOSTEL LIFE
+  // -------------------------------------------------------------
+  {
+    category: "College & Late Night Life",
+    words: ["Midnight Maggi", "Iced Vanilla Latte", "Monster Energy Drink"],
+    questions: [
+      "What boiling kettle, coffee syrup, or neon caffeinated can powers a college student through an exam?",
+      "At what ungodly hour of the night is this consumed in a dorm room?"
+    ]
+  },
+  {
+    category: "College & Late Night Life",
+    words: ["All-Nighter before Exam", "Proxy Attendance", "Submitting Assignment at 11:59 PM"],
+    questions: [
+      "How close to the deadline or class roll call is this risky move executed?",
+      "What level of panic and caffeine rush happens in the final 5 minutes?"
+    ]
+  },
+  {
+    category: "College & Late Night Life",
+    words: ["Bed Rotting (All Day in Bed)", "Binge Watching a Whole Season", "2 AM Online Shopping"],
+    questions: [
+      "How guilty do you feel after doing this for 8 continuous hours on a Sunday?",
+      "What blankets, delivery notifications, or 'Next Episode' button enabled this behavior?"
+    ]
+  },
+
+  // -------------------------------------------------------------
+  // 🔥 STREAMERS, CREATORS & INFLUENCERS
+  // -------------------------------------------------------------
+  {
+    category: "Streamers & Content Creators",
+    words: ["MrBeast", "IShowSpeed", "Kai Cenat"],
+    questions: [
+      "Is this creator famous for giving away millions of dollars, barking at Ronaldo, or streaming in a room?",
+      "What insane stunt, giveaway, or screaming live reaction made their stream break the internet?"
+    ]
+  },
+  {
+    category: "Streamers & Content Creators",
+    words: ["CarryMinati", "Bhuvan Bam (BB Ki Vines)", "Tanmay Bhat"],
+    questions: [
+      "What classic Indian YouTube roasting, multi-character comedy, or meme reaction format launched their fame?",
+      "What iconic punchline, voice modulation, or vlog laugh do their fans recognize instantly?"
+    ]
+  },
+  {
+    category: "Streamers & Content Creators",
+    words: ["Twitch Streamer", "Podcaster with a Giant Mic", "TikToker with a Ring Light"],
+    questions: [
+      "What microphone setup, circular glowing light, or RGB gaming chair is in their background?",
+      "What awkward hot take or sponsored energy drink are they promoting to their viewers?"
+    ]
+  },
+
+  // -------------------------------------------------------------
+  // 🎵 VIRAL MUSIC, POP ICONS & HIP-HOP
+  // -------------------------------------------------------------
+  {
+    category: "Pop & Music Icons",
+    words: ["Taylor Swift (Swifties)", "Billie Eilish", "Olivia Rodrigo"],
+    questions: [
+      "What massive stadium world tour, friendship bracelets, or breakup teenage anthem is this singer famed for?",
+      "What aesthetic (baggy streetwear, retro red lipstick, purple pop-punk) defines their era?"
+    ]
+  },
+  {
+    category: "Hip-Hop & Rap Giants",
+    words: ["Drake", "Travis Scott (Cactus Jack)", "Kanye West (Ye)"],
+    questions: [
+      "What high-fashion sneaker collab (Yeezy, Jordan), autotune beat, or viral rap beef represents this artist?",
+      "What iconic album cover or stadium listening party sent Twitter/X into a frenzy?"
+    ]
+  },
+  {
+    category: "Desi Hip-Hop & Punjabi Beats",
+    words: ["AP Dhillon", "Diljit Dosanjh", "Karan Aujla"],
+    questions: [
+      "What brown munde swagger, Coachella performance, or chart-topping Punjabi beat made them global stars?",
+      "What leather jacket, kurta-turban look, or bass-heavy drop is in their viral music videos?"
+    ]
+  },
+
+  // -------------------------------------------------------------
   // 🍕 FOOD, DELICACIES & STREET FOOD
   // -------------------------------------------------------------
   {

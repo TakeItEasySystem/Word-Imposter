@@ -72,11 +72,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080c14] bg-game-grid text-slate-100 relative selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#000000] bg-noir-grid text-zinc-100 relative selection:bg-white selection:text-black">
       
-      {/* Background Ambient Glows */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* Background Subtle Noir Fog / Vignette */}
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-zinc-600/[0.03] rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Navigation Header */}
       <Navbar gameState={gameState} onOpenRules={() => setIsRulesOpen(true)} />
@@ -84,8 +84,8 @@ export default function App() {
       {/* Toast Error Alert */}
       {errorMsg && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-          <div className="flex items-center space-x-2 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-2xl border-2 border-red-400 text-sm font-bold">
-            <AlertCircle className="w-5 h-5" />
+          <div className="flex items-center space-x-2 bg-red-950 text-red-200 px-5 py-3 rounded-2xl shadow-2xl border-2 border-red-500 text-sm font-mono font-bold">
+            <AlertCircle className="w-5 h-5 text-red-400" />
             <span>{errorMsg}</span>
             <button onClick={() => setErrorMsg(null)} className="ml-2 hover:opacity-80">
               <X className="w-4 h-4" />
@@ -106,8 +106,8 @@ export default function App() {
       <ChatBox gameState={gameState} />
 
       {/* Footer */}
-      <footer className="w-full text-center py-4 text-xs font-medium text-slate-500 border-t border-slate-900/80">
-        🎭 Word Imposter Party Game • 3 Words on Screen • Secret Social Deduction
+      <footer className="w-full text-center py-4 text-xs font-mono font-bold uppercase tracking-widest text-zinc-600 border-t border-zinc-900">
+        🕵️ BUREAU OF INVESTIGATION • CONFIDENTIAL CASE FILE • 3 EVIDENCE CLUES • 1 ROGUE IMPOSTER
       </footer>
 
     </div>

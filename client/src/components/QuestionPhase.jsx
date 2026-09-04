@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { HelpCircle, Send, CheckCircle2, Users } from 'lucide-react';
+import { HelpCircle, Send, CheckCircle2, Users, FileText, AlertTriangle } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function QuestionPhase({ gameState }) {
@@ -39,7 +39,7 @@ export default function QuestionPhase({ gameState }) {
   const answeredCount = gameState?.players?.filter(p => isQ1 ? p.hasAnsweredQ1 : p.hasAnsweredQ2).length || 0;
 
   return (
-    <div className="max-w-3xl mx-auto my-6 px-4 animate-fade-in">
+    <div className="max-w-3xl mx-auto my-6 px-4 animate-fade-in space-y-6">
       {/* 3 Candidate Words Banner */}
       <CandidateWordsBanner
         roundData={gameState?.roundData}
@@ -47,30 +47,33 @@ export default function QuestionPhase({ gameState }) {
         showSecretHighlight={true}
       />
 
-      <div className="game-panel-glow rounded-3xl p-6 sm:p-8 border-2 border-slate-800 shadow-2xl relative">
+      <div className="case-file-panel rounded-3xl p-6 sm:p-8 border-2 border-zinc-700 shadow-2xl relative">
         
         {/* Phase Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
-          <span className="bg-purple-950 text-purple-300 border border-purple-500/50 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-            {isQ1 ? 'Question 1 of 2' : 'Question 2 of 2'}
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
+          <span className="bg-black text-white border border-white text-xs font-mono font-black px-3.5 py-1 rounded-full uppercase tracking-widest">
+            {isQ1 ? 'INTERROGATION ROUND 01/02' : 'INTERROGATION ROUND 02/02'}
           </span>
 
-          <div className="flex items-center space-x-1.5 px-3.5 py-1 rounded-full border-2 border-slate-800 bg-[#0b0f19] text-slate-300 text-xs font-bold">
-            <Users className="w-3.5 h-3.5 text-purple-400" />
-            <span>{answeredCount} / {totalPlayers} Submitted</span>
+          <div className="flex items-center space-x-1.5 px-3.5 py-1 rounded-full border-2 border-zinc-800 bg-black text-zinc-300 text-xs font-mono font-bold">
+            <Users className="w-3.5 h-3.5 text-white" />
+            <span>TESTIMONIES: <strong className="text-white font-black">{answeredCount}</strong> / {totalPlayers}</span>
           </div>
         </div>
 
         {/* Question Prompt Box */}
-        <div className="text-center my-6 bg-[#0b0f19] p-6 rounded-2xl border-2 border-slate-800 shadow-inner">
-          <div className="inline-flex p-3 rounded-2xl bg-purple-500/20 text-purple-400 mb-3">
-            <HelpCircle className="w-7 h-7 text-purple-300" />
+        <div className="text-center my-6 bg-black p-6 rounded-2xl border-2 border-zinc-800 shadow-inner">
+          <div className="inline-flex p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-white mb-3">
+            <FileText className="w-6 h-6 text-white" />
           </div>
-          <h2 className="font-heading text-xl sm:text-2xl font-black text-white max-w-xl mx-auto leading-relaxed">
+          <div className="text-[10px] font-mono font-black uppercase tracking-widest text-zinc-500 mb-1">
+            OFFICIAL INTERROGATION PROMPT
+          </div>
+          <h2 className="font-heading font-black text-xl sm:text-2xl text-white max-w-xl mx-auto leading-relaxed">
             "{questionText}"
           </h2>
-          <p className="text-xs text-slate-400 mt-2 font-medium">
-            Give a subtle clue about your secret word without giving it away!
+          <p className="text-xs text-zinc-400 mt-2 font-mono">
+            Provide a subtle statement about your clue without revealing your secret lead directly!
           </p>
         </div>
 
@@ -80,14 +83,14 @@ export default function QuestionPhase({ gameState }) {
             <div>
               <textarea
                 rows={3}
-                placeholder="Type your clever clue here..."
+                placeholder="Type your testimony statement here..."
                 value={answerInput}
                 onChange={(e) => setAnswerInput(e.target.value)}
                 maxLength={120}
                 required
-                className="w-full bg-[#0b0f19] border-2 border-slate-700 rounded-2xl p-4 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition resize-none text-base font-semibold shadow-inner"
+                className="w-full bg-black border-2 border-zinc-700 rounded-2xl p-4 text-white placeholder-zinc-600 focus:outline-none focus:border-white transition resize-none text-base font-mono font-medium shadow-inner"
               />
-              <div className="text-right text-[11px] font-mono text-slate-500 mt-1">
+              <div className="text-right text-[11px] font-mono text-zinc-500 mt-1">
                 {answerInput.length}/120 characters
               </div>
             </div>
@@ -95,27 +98,27 @@ export default function QuestionPhase({ gameState }) {
             <button
               type="submit"
               disabled={!answerInput.trim()}
-              className="w-full py-4 text-white font-heading font-black text-lg rounded-2xl btn-3d-purple disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full py-4 rounded-2xl btn-noir-white disabled:opacity-40 flex items-center justify-center space-x-2 font-mono font-black text-sm uppercase tracking-wider"
             >
               <Send className="w-4 h-4" />
-              <span>SUBMIT ANSWER</span>
+              <span>LOG TESTIMONY 📝</span>
             </button>
           </form>
         ) : (
-          <div className="max-w-md mx-auto p-6 bg-emerald-950/40 rounded-2xl border-2 border-emerald-500/40 text-center space-y-2">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
-            <h3 className="font-heading font-black text-lg text-emerald-300">Answer Submitted!</h3>
-            <p className="text-xs text-slate-400 font-medium">
-              Waiting for other players ({answeredCount}/{totalPlayers}). Advances automatically when ready!
+          <div className="max-w-md mx-auto p-6 bg-black rounded-2xl border-2 border-white text-center space-y-2">
+            <CheckCircle2 className="w-10 h-10 text-white mx-auto animate-bounce" />
+            <h3 className="font-heading font-black text-lg text-white">Testimony Recorded!</h3>
+            <p className="text-xs text-zinc-400 font-mono">
+              Waiting for all suspects to log statements ({answeredCount}/{totalPlayers})...
             </p>
           </div>
         )}
 
         {/* Players Submission Live Status */}
-        <div className="mt-8 pt-6 border-t border-slate-800">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-1.5">
-            <Users className="w-4 h-4 text-purple-400" />
-            <span>Players Progress:</span>
+        <div className="mt-8 pt-6 border-t border-zinc-800">
+          <div className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center space-x-1.5">
+            <Users className="w-4 h-4 text-white" />
+            <span>Suspect Status:</span>
           </div>
           <div className="flex flex-wrap gap-2.5">
             {gameState?.players?.map((p) => {
@@ -123,18 +126,18 @@ export default function QuestionPhase({ gameState }) {
               return (
                 <div
                   key={p.id}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition ${
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border-2 text-xs font-mono font-bold transition ${
                     answered
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                      : 'bg-[#0b0f19] border-slate-800 text-slate-500'
+                      ? 'bg-zinc-900 border-white text-white'
+                      : 'bg-black border-zinc-800 text-zinc-600'
                   }`}
                 >
                   <span>{p.avatar}</span>
                   <span>{p.name}</span>
                   {answered ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                   ) : (
-                    <span className="text-[10px] text-slate-500 font-normal italic">(typing...)</span>
+                    <span className="text-[10px] text-zinc-600 font-normal italic">(typing...)</span>
                   )}
                 </div>
               );

@@ -3,6 +3,14 @@ import { getRandomWordSet } from './wordBank.js';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-pro'
+];
+
 export async function generateWordTriplet(theme = 'Random Mix') {
   // If no Gemini API key is provided, use the offline fallback bank with history tracking
   if (!GEMINI_API_KEY) {
@@ -39,57 +47,60 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
   ]
 }`;
 
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.85,
-          topP: 0.95,
-          responseMimeType: "application/json"
-        }
-      })
-    });
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.85,
+            topP: 0.95
+          }
+        })
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API error (${response.status}): ${errText}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.warn(`[AIGenerator] Model ${modelName} returned status ${response.status}: ${errText.substring(0, 150)}`);
+        continue; // Try next model in list
+      }
+
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Clean potential markdown wrapper
+      const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanedJson);
+
+      if (
+        parsed &&
+        Array.isArray(parsed.words) &&
+        parsed.words.length === 3 &&
+        Array.isArray(parsed.questions) &&
+        parsed.questions.length >= 2
+      ) {
+        const result = {
+          category: parsed.category || theme || 'Mystery Theme',
+          words: parsed.words.map(w => String(w).trim()),
+          questions: parsed.questions.slice(0, 2).map(q => String(q).trim())
+        };
+
+        // Record words in history manager to avoid future repetition
+        historyManager.recordUsedWords(result.words);
+        console.log(`[AIGenerator] ✨ Model (${modelName}) successfully generated triplet for "${theme}":`, result.words);
+        return result;
+      }
+    } catch (err) {
+      console.warn(`[AIGenerator] Model ${modelName} parse/request failed: ${err.message}`);
     }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    // Clean potential markdown wrapper
-    const cleanedJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanedJson);
-
-    if (
-      parsed &&
-      Array.isArray(parsed.words) &&
-      parsed.words.length === 3 &&
-      Array.isArray(parsed.questions) &&
-      parsed.questions.length >= 2
-    ) {
-      const result = {
-        category: parsed.category || theme || 'Mystery Theme',
-        words: parsed.words.map(w => String(w).trim()),
-        questions: parsed.questions.slice(0, 2).map(q => String(q).trim())
-      };
-
-      // Record words in history manager to avoid future repetition
-      historyManager.recordUsedWords(result.words);
-      console.log(`[AIGenerator] ✨ AI successfully generated triplet for "${theme}":`, result.words);
-      return result;
-    } else {
-      throw new Error("Invalid schema structure returned from Gemini");
-    }
-  } catch (err) {
-    console.warn(`[AIGenerator] AI generation failed (${err.message}), falling back to curated bank.`);
-    const fallbackSet = getRandomWordSet(theme);
-    historyManager.recordUsedWords(fallbackSet.words);
-    return fallbackSet;
   }
+
+  // If all models failed or threw errors, fallback safely to curated wordbank
+  console.warn(`[AIGenerator] All Gemini models exhausted. Falling back to curated bank.`);
+  const fallbackSet = getRandomWordSet(theme);
+  historyManager.recordUsedWords(fallbackSet.words);
+  return fallbackSet;
 }

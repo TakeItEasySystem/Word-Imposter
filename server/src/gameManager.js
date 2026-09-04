@@ -382,67 +382,84 @@ export class GameManager {
   }
 
   resolveVotes(room) {
-    // Tally votes
-    const voteCounts = {};
+    const imposterId = room.roundData.imposterId;
+    const imposter = room.players.find(p => p.id === imposterId);
+    const civilians = room.players.filter(p => p.role === 'CIVILIAN');
+    const numCivilians = civilians.length;
+    const totalBountyPool = numCivilians * 100; // e.g., 300 pts in a 4-player game
+
+    // Tally votes from Civilians only (Imposter's vote does not count towards deciding the verdict)
+    const civilianVoteCounts = {};
     room.players.forEach(p => {
-      voteCounts[p.id] = 0;
+      civilianVoteCounts[p.id] = 0;
     });
 
-    room.players.forEach(p => {
-      if (p.vote && voteCounts[p.vote] !== undefined) {
-        voteCounts[p.vote]++;
+    civilians.forEach(c => {
+      if (c.vote && civilianVoteCounts[c.vote] !== undefined) {
+        civilianVoteCounts[c.vote]++;
       }
     });
 
-    const imposterId = room.roundData.imposterId;
-    const imposter = room.players.find(p => p.id === imposterId);
+    // Also track total raw votes for UI display
+    const totalVoteCounts = { ...civilianVoteCounts };
+    if (imposter && imposter.vote && totalVoteCounts[imposter.vote] !== undefined) {
+      totalVoteCounts[imposter.vote]++;
+    }
 
-    // Determine who got the most votes
-    let maxVotes = 0;
+    // Determine highest voted suspect among Civilians' votes
+    let maxCivilianVotes = 0;
     let mostVotedPlayers = [];
-    for (const [playerId, count] of Object.entries(voteCounts)) {
-      if (count > maxVotes) {
-        maxVotes = count;
+    for (const [playerId, count] of Object.entries(civilianVoteCounts)) {
+      if (count > maxCivilianVotes) {
+        maxCivilianVotes = count;
         mostVotedPlayers = [playerId];
-      } else if (count === maxVotes && count > 0) {
+      } else if (count === maxCivilianVotes && count > 0) {
         mostVotedPlayers.push(playerId);
       }
     }
 
-    const imposterCaught = mostVotedPlayers.length === 1 && mostVotedPlayers[0] === imposterId;
+    // Imposter is caught ONLY if Civilians cast the unique majority/highest votes for the Imposter
+    const imposterCaught = mostVotedPlayers.length === 1 && mostVotedPlayers[0] === imposterId && maxCivilianVotes > 0;
     room.roundData.imposterCaught = imposterCaught;
-    room.roundData.voteCounts = voteCounts;
+    room.roundData.voteCounts = totalVoteCounts;
+    room.roundData.civilianVoteCounts = civilianVoteCounts;
 
     // Distribute points:
-    // 1. Civilians who correctly voted for the Imposter get 100 points
-    // 2. Imposter: If not caught, gets +150 points. Also +50 points for each vote an innocent civilian received.
+    // 1. If Imposter is caught: Each civilian who correctly voted for Imposter receives +100 pts. Imposter gets 0.
+    // 2. If Imposter is NOT caught: Civilians get 0 pts. ALL bounty points (numCivilians * 100) go to the Imposter!
     const roundScores = {};
     room.players.forEach(p => {
       roundScores[p.id] = 0;
+    });
 
-      if (p.role === 'CIVILIAN') {
-        if (p.vote === imposterId) {
-          roundScores[p.id] += 100;
+    if (imposterCaught) {
+      civilians.forEach(c => {
+        if (c.vote === imposterId) {
+          roundScores[c.id] = 100;
+        } else {
+          roundScores[c.id] = 0;
         }
-      } else if (p.role === 'IMPOSTER') {
-        if (!imposterCaught) {
-          roundScores[p.id] += 150;
-        }
-        // Bonus for misleading votes
-        let misleadingVotes = 0;
-        room.players.forEach(other => {
-          if (other.role === 'CIVILIAN' && other.vote && other.vote !== imposterId) {
-            misleadingVotes++;
-          }
-        });
-        roundScores[p.id] += misleadingVotes * 50;
+      });
+      if (imposter) {
+        roundScores[imposter.id] = 0;
       }
+    } else {
+      // Imposter escaped or no one caught them - Imposter sweeps ALL points!
+      civilians.forEach(c => {
+        roundScores[c.id] = 0;
+      });
+      if (imposter) {
+        roundScores[imposter.id] = totalBountyPool;
+      }
+    }
 
-      // Add to cumulative score
-      p.score += roundScores[p.id];
+    // Add to cumulative scores
+    room.players.forEach(p => {
+      p.score += (roundScores[p.id] || 0);
     });
 
     room.roundData.roundScores = roundScores;
+    room.roundData.totalBountyPool = totalBountyPool;
     room.state = 'RESULTS';
     this.emitRoomState(room.code);
   }

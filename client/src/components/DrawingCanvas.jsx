@@ -3,15 +3,15 @@ import { RotateCcw, Trash2, Eraser, PenTool } from 'lucide-react';
 import { playPop } from '../utils/audio';
 
 const PALETTE = [
-  '#000000', '#ffffff', '#ef4444', '#f97316', '#eab308',
-  '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#78350f'
+  '#000000', '#27272a', '#71717a', '#ffffff', '#ef4444',
+  '#b91c1c', '#3b82f6', '#10b981', '#f59e0b', '#78350f'
 ];
 
 const SIZES = [
-  { label: 'S', size: 3 },
-  { label: 'M', size: 6 },
-  { label: 'L', size: 12 },
-  { label: 'XL', size: 22 }
+  { label: 'Fine', size: 3 },
+  { label: 'Med', size: 6 },
+  { label: 'Bold', size: 12 },
+  { label: 'Ink', size: 22 }
 ];
 
 export default function DrawingCanvas({ onSave, disabled = false }) {
@@ -119,7 +119,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
   return (
     <div className="flex flex-col items-center w-full max-w-lg mx-auto">
       {/* Canvas Container */}
-      <div className="relative w-full aspect-[4/3] bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-slate-700">
+      <div className="relative w-full aspect-[4/3] bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-zinc-700">
         <canvas
           ref={canvasRef}
           width={600}
@@ -134,17 +134,17 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
           className="w-full h-full cursor-crosshair drawing-canvas"
         />
         {disabled && (
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white font-bold">
-            Drawing locked
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center text-white font-mono font-black text-sm uppercase tracking-widest">
+            🔒 EXHIBIT LOCKED & SUBMITTED
           </div>
         )}
       </div>
 
       {/* Toolbar Controls */}
       {!disabled && (
-        <div className="w-full mt-3 p-3 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-3">
+        <div className="w-full mt-3 p-3 bg-black rounded-2xl border border-zinc-800 space-y-3 shadow-xl">
           
-          {/* Top Row: Palette & Eraser */}
+          {/* Top Row: Palette & Tool Type */}
           <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
             <div className="flex items-center space-x-1.5">
               {PALETTE.map((c) => (
@@ -155,21 +155,21 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                   style={{ backgroundColor: c }}
                   className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 transition transform active:scale-90 ${
                     color === c && !isEraser
-                      ? 'border-purple-400 scale-110 shadow-md ring-2 ring-purple-400/40'
-                      : 'border-slate-700 hover:scale-105'
+                      ? 'border-white scale-110 shadow-md ring-2 ring-white/50'
+                      : 'border-zinc-700 hover:scale-105'
                   }`}
                 />
               ))}
             </div>
 
-            <div className="flex items-center space-x-1 border-l border-slate-800 pl-2">
+            <div className="flex items-center space-x-1 border-l border-zinc-800 pl-2">
               <button
                 type="button"
                 onClick={() => { setIsEraser(false); playPop(); }}
                 className={`p-1.5 rounded-lg border transition ${
-                  !isEraser ? 'bg-purple-600 text-white border-purple-400' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  !isEraser ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
                 }`}
-                title="Pen"
+                title="Pen / Ink"
               >
                 <PenTool className="w-4 h-4" />
               </button>
@@ -177,7 +177,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                 type="button"
                 onClick={() => { setIsEraser(true); playPop(); }}
                 className={`p-1.5 rounded-lg border transition ${
-                  isEraser ? 'bg-purple-600 text-white border-purple-400' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  isEraser ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
                 }`}
                 title="Eraser"
               >
@@ -187,19 +187,19 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
           </div>
 
           {/* Bottom Row: Brush Sizes & Undo/Clear */}
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+          <div className="flex items-center justify-between pt-1 border-t border-zinc-900 font-mono">
             {/* Brush Sizes */}
             <div className="flex items-center space-x-1.5">
-              <span className="text-[10px] uppercase font-bold text-slate-500 mr-1">Size</span>
+              <span className="text-[10px] uppercase font-black text-zinc-500 mr-1">Stroke:</span>
               {SIZES.map((s) => (
                 <button
                   key={s.size}
                   type="button"
                   onClick={() => { setBrushSize(s.size); playPop(); }}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
                     brushSize === s.size
-                      ? 'bg-purple-600/40 text-purple-300 border border-purple-400'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-transparent'
+                      ? 'bg-white text-black font-black'
+                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'
                   }`}
                 >
                   {s.label}
@@ -213,7 +213,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
                 type="button"
                 onClick={handleUndo}
                 disabled={history.length <= 1}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs text-slate-300 transition"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 disabled:opacity-30 text-xs text-zinc-300 transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Undo</span>
@@ -221,7 +221,7 @@ export default function DrawingCanvas({ onSave, disabled = false }) {
               <button
                 type="button"
                 onClick={handleClear}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-xs text-red-300 transition"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-red-950 hover:bg-red-900 border border-red-800 text-xs text-red-200 transition"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear</span>

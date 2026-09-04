@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { Palette, CheckCircle2, Users, Send, Lock } from 'lucide-react';
+import { Palette, CheckCircle2, Users, Send, Lock, PenTool, ShieldAlert } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 import DrawingCanvas from './DrawingCanvas';
 
@@ -45,41 +45,46 @@ export default function DrawingPhase({ gameState }) {
       />
 
       {/* Drawing Phase Header */}
-      <div className="game-panel p-5 sm:p-6 rounded-3xl border-2 border-slate-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="case-file-panel p-5 sm:p-6 rounded-3xl border-2 border-zinc-700 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="p-3 bg-purple-500/20 rounded-2xl border-2 border-purple-500/40 text-purple-400">
-            <Palette className="w-6 h-6" />
+          <div className="p-3 bg-zinc-900 rounded-2xl border-2 border-zinc-700 text-white">
+            <PenTool className="w-6 h-6" />
           </div>
           <div>
+            <div className="flex items-center space-x-2 mb-0.5">
+              <span className="text-[9px] font-mono font-black text-white bg-zinc-900 px-2 py-0.5 rounded border border-zinc-700 uppercase tracking-widest">
+                EXHIBIT LAB • CONFIDENTIAL SKETCH
+              </span>
+            </div>
             <h2 className="font-heading font-black text-xl sm:text-2xl text-white">
-              Secret Drawing Studio
+              Forensic Sketch Laboratory
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5 font-medium">
-              Draw clues for your word: <strong className="text-purple-300 font-bold">{gameState?.myWord}</strong>. Drawings stay private until Voting!
+            <p className="text-xs text-zinc-400 font-mono">
+              Draw clues for your assigned lead: <strong className="text-white font-bold">{gameState?.myWord}</strong>. Sketches remain strictly hidden until the Tribunal!
             </p>
           </div>
         </div>
 
         {/* Progress Tracker */}
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-full border-2 border-slate-800 bg-[#0b0f19] text-slate-200 text-xs font-bold shrink-0">
-          <Users className="w-4 h-4 text-purple-400" />
-          <span>{submittedCount} / {totalPlayers} Submitted</span>
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-full border-2 border-zinc-800 bg-black text-zinc-300 text-xs font-mono font-bold shrink-0">
+          <Users className="w-4 h-4 text-white" />
+          <span>SKETCHES: <strong className="text-white font-black">{submittedCount}</strong> / {totalPlayers}</span>
         </div>
       </div>
 
       {/* Centered Secret Drawing Board */}
-      <div className="game-panel-glow rounded-3xl p-6 sm:p-8 border-2 border-purple-900/60 space-y-5 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="case-file-panel rounded-3xl p-6 sm:p-8 border-2 border-zinc-700 space-y-5 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
           <div>
-            <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-slate-400">Your Secret Canvas</span>
-            <div className="font-heading font-black text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400">
+            <span className="text-[10px] font-mono uppercase font-black tracking-widest text-zinc-500">SECRET LEAD</span>
+            <div className="font-mono font-black text-2xl sm:text-3xl text-white tracking-widest uppercase">
               {gameState?.myWord}
             </div>
           </div>
 
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-300 bg-[#0b0f19] px-3.5 py-1.5 rounded-full border-2 border-slate-800">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Private & Hidden</span>
+          <div className="flex items-center space-x-1.5 text-xs font-mono font-bold text-zinc-300 bg-black px-3.5 py-1.5 rounded-full border-2 border-zinc-800">
+            <Lock className="w-3.5 h-3.5 text-red-400" />
+            <span>CONFIDENTIAL // NO LEAKS</span>
           </div>
         </div>
 
@@ -95,30 +100,30 @@ export default function DrawingPhase({ gameState }) {
             <button
               onClick={handleSubmit}
               disabled={!currentDrawing}
-              className="w-full py-4 text-white font-heading font-black text-lg rounded-2xl btn-3d-purple disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full py-4 rounded-2xl btn-noir-white disabled:opacity-40 flex items-center justify-center space-x-2 font-mono font-black text-sm uppercase tracking-wider"
             >
-              <Send className="w-5 h-5" />
-              <span>SUBMIT MY DRAWING</span>
+              <Send className="w-4 h-4" />
+              <span>SUBMIT FORENSIC SKETCH 🔒</span>
             </button>
-            <p className="text-center text-[11px] text-slate-500 mt-2 font-medium">
-              💡 You can undo, erase, and draw as much as you like before clicking Submit.
+            <p className="text-center text-[11px] font-mono text-zinc-500 mt-2">
+              💡 Your sketch will remain 100% private until all suspects complete their drawings.
             </p>
           </div>
         ) : (
-          <div className="max-w-md mx-auto p-5 bg-emerald-950/40 rounded-2xl border-2 border-emerald-500/40 text-center space-y-1.5">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
-            <h3 className="font-heading font-black text-base text-emerald-300">Drawing Locked & Submitted!</h3>
-            <p className="text-xs text-slate-400 font-medium">
-              Waiting for remaining players ({submittedCount}/{totalPlayers}). All drawings will be revealed together during Voting!
+          <div className="max-w-md mx-auto p-5 bg-black rounded-2xl border-2 border-white text-center space-y-1.5">
+            <CheckCircle2 className="w-8 h-8 text-white mx-auto animate-bounce" />
+            <h3 className="font-heading font-black text-base text-white">Forensic Exhibit Locked!</h3>
+            <p className="text-xs font-mono text-zinc-400">
+              Waiting for other suspects ({submittedCount}/{totalPlayers}). All drawings will be unsealed together during the Tribunal!
             </p>
           </div>
         )}
 
         {/* Players Submission Status (No drawings leaked) */}
-        <div className="pt-5 border-t border-slate-800">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-1.5">
-            <Users className="w-4 h-4 text-purple-400" />
-            <span>Players Progress:</span>
+        <div className="pt-5 border-t border-zinc-800">
+          <div className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center space-x-1.5">
+            <Users className="w-4 h-4 text-white" />
+            <span>Suspect Sketch Status:</span>
           </div>
           <div className="flex flex-wrap gap-2.5">
             {gameState?.players?.map((player) => {
@@ -127,18 +132,18 @@ export default function DrawingPhase({ gameState }) {
               return (
                 <div
                   key={player.id}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition ${
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border-2 text-xs font-mono font-bold transition ${
                     hasFinished
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                      : 'bg-[#0b0f19] border-slate-800 text-slate-400'
+                      ? 'bg-zinc-900 border-white text-white'
+                      : 'bg-black border-zinc-800 text-zinc-600'
                   }`}
                 >
                   <span>{player.avatar}</span>
                   <span>{player.name} {isMe && '(You)'}</span>
                   {hasFinished ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                   ) : (
-                    <span className="text-[10px] text-slate-500 font-normal italic">(Drawing...)</span>
+                    <span className="text-[10px] text-zinc-600 font-normal italic">(Drawing...)</span>
                   )}
                 </div>
               );

@@ -6,6 +6,17 @@ function getCleanApiKey() {
   return rawKey.trim().replace(/^["']|["']$/g, '');
 }
 
+function getAuthHeaders(apiKey) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) {
+    headers['x-goog-api-key'] = apiKey;
+    if (apiKey.startsWith('AQ.') || apiKey.startsWith('ya29.')) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+  }
+  return headers;
+}
+
 const CANDIDATE_MODELS = [
   'gemini-2.0-flash',
   'gemini-2.5-flash',
@@ -64,7 +75,7 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(apiKey),
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
@@ -138,7 +149,9 @@ export async function checkGeminiStatus(force = false) {
   // 1. Diagnostic Step: Check if API key is accepted by Google
   let diagnosticMessage = '';
   try {
-    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+      headers: getAuthHeaders(apiKey)
+    });
     if (!listRes.ok) {
       const errBody = await listRes.text();
       let parsedErr = {};
@@ -168,7 +181,7 @@ export async function checkGeminiStatus(force = false) {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(apiKey),
         body: JSON.stringify({
           contents: [{ parts: [{ text: "Hello" }] }],
           generationConfig: { maxOutputTokens: 5 }

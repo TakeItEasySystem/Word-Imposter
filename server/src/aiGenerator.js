@@ -53,61 +53,95 @@ const CANDIDATE_MODELS = [
   'gemini-pro'
 ];
 
-let cachedWorkingModel = null;
+let cachedAuthConfig = null; // { apiVersion, strategy, modelName }
 
-async function executeGeminiRequest(modelName, bodyPayload, apiKey) {
-  // Strategy A: Header x-goog-api-key (Standard REST without query param)
-  // Strategy B: Header Authorization: Bearer (Required for AQ. tokens / OAuth keys)
-  // Strategy C: URL query param ?key= (Legacy AIzaSy keys)
-  const strategies = [
-    {
-      name: 'Bearer Token',
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+async function getWorkingAuthConfig(apiKey, force = false) {
+  if (!force && cachedAuthConfig) {
+    return cachedAuthConfig;
+  }
+
+  const versions = ['v1beta', 'v1'];
+  const testPing = {
+    contents: [{ parts: [{ text: "ping" }] }],
+    generationConfig: { maxOutputTokens: 5 }
+  };
+
+  // 1. Try dynamic discovery from Google's model registry
+  for (const v of versions) {
+    const endpoints = [
+      { name: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, url: `https://generativelanguage.googleapis.com/${v}/models` },
+      { name: 'Header', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, url: `https://generativelanguage.googleapis.com/${v}/models` },
+      { name: 'Query', headers: { 'Content-Type': 'application/json' }, url: `https://generativelanguage.googleapis.com/${v}/models?key=${encodeURIComponent(apiKey)}` }
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep.url, { headers: ep.headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.models)) {
+            const usable = data.models
+              .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace(/^models\//, ''));
+
+            if (usable.length > 0) {
+              // Priority: 1.5-flash, 2.0-flash, 1.5-pro, first available
+              const pickedModel = usable.find(m => m.includes('1.5-flash')) ||
+                                 usable.find(m => m.includes('2.0-flash')) ||
+                                 usable.find(m => m.includes('flash')) ||
+                                 usable[0];
+
+              cachedAuthConfig = {
+                apiVersion: v,
+                strategy: ep.name,
+                modelName: pickedModel,
+                allModels: usable
+              };
+              console.log(`[AIGenerator] 🎯 Discovered & locked working model "${pickedModel}" via ${v} (${ep.name})`);
+              return cachedAuthConfig;
+            }
+          }
+        }
+      } catch (err) {
+        // Continue trying next endpoint
       }
-    },
-    {
-      name: 'x-goog-api-key header',
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      }
-    },
-    {
-      name: 'URL key param',
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-  ];
-
-  let lastError = null;
-
-  for (const strategy of strategies) {
-    try {
-      const response = await fetch(strategy.url, {
-        method: 'POST',
-        headers: strategy.headers,
-        body: JSON.stringify(bodyPayload)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return { success: true, data, strategy: strategy.name };
-      }
-
-      const errText = await response.text();
-      lastError = `[${strategy.name}] Status ${response.status}: ${errText.substring(0, 160)}`;
-    } catch (err) {
-      lastError = `[${strategy.name}] Network error: ${err.message}`;
     }
   }
 
-  return { success: false, error: lastError };
+  // 2. Fallback: try direct candidate model matrix
+  const candidateModels = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro'];
+  for (const v of versions) {
+    for (const m of candidateModels) {
+      const candidates = [
+        { name: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent` },
+        { name: 'Header', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent` },
+        { name: 'Query', headers: { 'Content-Type': 'application/json' }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}` }
+      ];
+
+      for (const cand of candidates) {
+        try {
+          const res = await fetch(cand.url, {
+            method: 'POST',
+            headers: cand.headers,
+            body: JSON.stringify(testPing)
+          });
+
+          if (res.ok) {
+            cachedAuthConfig = {
+              apiVersion: v,
+              strategy: cand.name,
+              modelName: m,
+              allModels: [m]
+            };
+            console.log(`[AIGenerator] 🎯 Direct lock succeeded with model "${m}" via ${v} (${cand.name})`);
+            return cachedAuthConfig;
+          }
+        } catch (err) {}
+      }
+    }
+  }
+
+  return null;
 }
 
 export async function generateWordTriplet(theme = 'Random Mix') {
@@ -115,6 +149,14 @@ export async function generateWordTriplet(theme = 'Random Mix') {
 
   if (!apiKey) {
     console.log(`[AIGenerator] No GEMINI_API_KEY set. Using curated word bank for theme: "${theme}".`);
+    const fallbackSet = getRandomWordSet(theme);
+    historyManager.recordUsedWords(fallbackSet.words);
+    return fallbackSet;
+  }
+
+  const authConfig = await getWorkingAuthConfig(apiKey);
+  if (!authConfig) {
+    console.warn(`[AIGenerator] Could not connect to Gemini API. Falling back safely to curated wordbank.`);
     const fallbackSet = getRandomWordSet(theme);
     historyManager.recordUsedWords(fallbackSet.words);
     return fallbackSet;
@@ -152,54 +194,62 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
     generationConfig: { temperature: 0.85, topP: 0.95 }
   };
 
-  const modelsToTry = cachedWorkingModel 
-    ? [cachedWorkingModel, ...CANDIDATE_MODELS.filter(m => m !== cachedWorkingModel)]
-    : CANDIDATE_MODELS;
+  const url = authConfig.strategy === 'Query'
+    ? `https://generativelanguage.googleapis.com/${authConfig.apiVersion}/models/${authConfig.modelName}:generateContent?key=${encodeURIComponent(apiKey)}`
+    : `https://generativelanguage.googleapis.com/${authConfig.apiVersion}/models/${authConfig.modelName}:generateContent`;
 
-  for (const modelName of modelsToTry) {
-    const result = await executeGeminiRequest(modelName, payload, apiKey);
-    if (result.success) {
-      try {
-        const rawText = result.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanedJson);
-
-        if (
-          parsed &&
-          Array.isArray(parsed.words) &&
-          parsed.words.length === 3 &&
-          Array.isArray(parsed.questions) &&
-          parsed.questions.length >= 2
-        ) {
-          const generated = {
-            category: parsed.category || theme || 'Mystery Theme',
-            words: parsed.words.map(w => String(w).trim()),
-            questions: parsed.questions.slice(0, 2).map(q => String(q).trim())
-          };
-
-          cachedWorkingModel = modelName;
-          historyManager.recordUsedWords(generated.words);
-          console.log(`[AIGenerator] ✨ Model (${modelName} via ${result.strategy}) generated triplet for "${theme}":`, generated.words);
-          return generated;
-        }
-      } catch (parseErr) {
-        console.warn(`[AIGenerator] JSON parse failed on ${modelName}: ${parseErr.message}`);
-      }
-    } else {
-      console.warn(`[AIGenerator] ${modelName} failed: ${result.error}`);
-    }
+  const headers = { 'Content-Type': 'application/json' };
+  if (authConfig.strategy === 'Bearer') {
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  } else if (authConfig.strategy === 'Header') {
+    headers['x-goog-api-key'] = apiKey;
   }
 
-  console.warn(`[AIGenerator] All Gemini models exhausted. Falling back to curated bank.`);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanedJson);
+
+      if (
+        parsed &&
+        Array.isArray(parsed.words) &&
+        parsed.words.length === 3 &&
+        Array.isArray(parsed.questions) &&
+        parsed.questions.length >= 2
+      ) {
+        const generated = {
+          category: parsed.category || theme || 'Mystery Theme',
+          words: parsed.words.map(w => String(w).trim()),
+          questions: parsed.questions.slice(0, 2).map(q => String(q).trim())
+        };
+
+        historyManager.recordUsedWords(generated.words);
+        console.log(`[AIGenerator] ✨ Model (${authConfig.modelName}) generated triplet for "${theme}":`, generated.words);
+        return generated;
+      }
+    } else {
+      const errText = await response.text();
+      console.warn(`[AIGenerator] Generation failed (${response.status}): ${errText.substring(0, 150)}`);
+    }
+  } catch (err) {
+    console.warn(`[AIGenerator] Generation request error: ${err.message}`);
+  }
+
+  console.warn(`[AIGenerator] Falling back to curated bank for "${theme}".`);
   const fallbackSet = getRandomWordSet(theme);
   historyManager.recordUsedWords(fallbackSet.words);
   return fallbackSet;
 }
 
 // Fast health check test for Gemini API connectivity with detailed diagnostic feedback
-let cachedGeminiStatus = null;
-let lastCheckTime = 0;
-
 export async function checkGeminiStatus(force = false) {
   const apiKey = getCleanApiKey();
   if (!apiKey) {
@@ -210,42 +260,24 @@ export async function checkGeminiStatus(force = false) {
     };
   }
 
-  const now = Date.now();
-  if (!force && cachedGeminiStatus && (now - lastCheckTime < 60000)) {
-    return cachedGeminiStatus;
+  const authConfig = await getWorkingAuthConfig(apiKey, force);
+  if (authConfig) {
+    return {
+      configured: true,
+      status: 'connected',
+      workingModel: authConfig.modelName,
+      apiVersion: authConfig.apiVersion,
+      authStrategy: authConfig.strategy,
+      availableModelsCount: authConfig.allModels?.length || 1,
+      message: `Gemini API successfully connected & operational with model "${authConfig.modelName}"!`
+    };
   }
 
-  const pingPayload = {
-    contents: [{ parts: [{ text: "Hello" }] }],
-    generationConfig: { maxOutputTokens: 5 }
-  };
-
-  let lastDiag = '';
-
-  for (const modelName of CANDIDATE_MODELS) {
-    const result = await executeGeminiRequest(modelName, pingPayload, apiKey);
-    if (result.success) {
-      cachedWorkingModel = modelName;
-      cachedGeminiStatus = {
-        configured: true,
-        status: 'connected',
-        workingModel: modelName,
-        authStrategy: result.strategy,
-        message: `Gemini API successfully connected & operational with model "${modelName}" (via ${result.strategy})!`
-      };
-      lastCheckTime = now;
-      return cachedGeminiStatus;
-    } else {
-      lastDiag = result.error;
-    }
-  }
-
-  cachedGeminiStatus = {
+  return {
     configured: true,
     status: 'error',
-    message: lastDiag || 'GEMINI_API_KEY is set, but all candidate models failed generation.'
+    message: 'GEMINI_API_KEY was found, but Google returned an authentication or model error. Curated 70+ decks active.'
   };
-  lastCheckTime = now;
-  return cachedGeminiStatus;
 }
+
 

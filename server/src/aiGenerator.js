@@ -84,22 +84,41 @@ async function getWorkingAuthConfig(apiKey, force = false) {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data?.models)) {
-            const usable = data.models
+            const rawModels = data.models
               .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
               .map(m => m.name.replace(/^models\//, ''));
 
-            console.log(`[AIGenerator] 📋 Google registry returned ${usable.length} models for ${v} (${ep.name}):`, usable.slice(0, 8));
+            // Filter out non-text models (tts, image, audio, embedding) and deprecated 2.5-flash models
+            const textUsable = rawModels.filter(m => {
+              const lower = m.toLowerCase();
+              if (lower.includes('-tts') || lower.includes('-image') || lower.includes('-audio') || lower.includes('embed')) return false;
+              if (lower.includes('2.5-flash')) return false; // Deprecated by Google for new users
+              return true;
+            });
 
-            if (usable.length > 0) {
-              // Sort candidates: modern flash models first (2.0-flash, flash-lite, 1.5-flash), then pro, then others
-              const sorted = [...usable].sort((a, b) => {
-                const aFlash = a.includes('flash') ? 1 : 0;
-                const bFlash = b.includes('flash') ? 1 : 0;
-                if (aFlash !== bFlash) return bFlash - aFlash;
-                const aTwo = (a.includes('2.0') || a.includes('2.5')) ? 1 : 0;
-                const bTwo = (b.includes('2.0') || b.includes('2.5')) ? 1 : 0;
-                return bTwo - aTwo;
-              });
+            console.log(`[AIGenerator] 📋 Usable text models for ${v} (${ep.name}):`, textUsable);
+
+            if (textUsable.length > 0) {
+              const getModelScore = (name) => {
+                const lower = name.toLowerCase();
+                if (lower === 'gemini-2.0-flash') return 100;
+                if (lower === 'gemini-2.0-flash-lite' || lower === 'gemini-2.0-flash-lite-preview') return 95;
+                if (lower === 'gemini-flash-latest') return 92;
+                if (lower === 'gemini-flash-lite-latest') return 90;
+                if (lower === 'gemini-1.5-flash') return 85;
+                if (lower === 'gemini-1.5-flash-latest') return 84;
+                if (lower === 'gemini-1.5-flash-8b') return 80;
+                if (lower.includes('2.0-flash')) return 78;
+                if (lower.includes('1.5-flash')) return 75;
+                if (lower === 'gemini-2.0-pro' || lower.includes('2.0-pro')) return 70;
+                if (lower === 'gemini-1.5-pro' || lower.includes('1.5-pro')) return 65;
+                if (lower.includes('flash')) return 60;
+                if (lower.includes('pro')) return 50;
+                return 10;
+              };
+
+              // Sort by proven text generation performance & reliability
+              const sorted = [...textUsable].sort((a, b) => getModelScore(b) - getModelScore(a));
 
               // Test-ping models until we find one that successfully responds with HTTP 200
               for (const candidate of sorted) {
@@ -119,7 +138,7 @@ async function getWorkingAuthConfig(apiKey, force = false) {
                       apiVersion: v,
                       strategy: ep.name,
                       modelName: candidate,
-                      allModels: usable
+                      allModels: textUsable
                     };
                     console.log(`[AIGenerator] 🎯 Verified & locked working model "${candidate}" via ${v} (${ep.name})`);
                     return cachedAuthConfig;

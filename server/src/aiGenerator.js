@@ -66,7 +66,10 @@ async function getWorkingAuthConfig(apiKey, force = false) {
 
   const versions = ['v1beta', 'v1'];
   const testPing = {
-    contents: [{ parts: [{ text: "ping" }] }],
+    contents: [{
+      role: 'user',
+      parts: [{ text: "ping" }]
+    }],
     generationConfig: { maxOutputTokens: 5 }
   };
 
@@ -131,7 +134,7 @@ async function getWorkingAuthConfig(apiKey, force = false) {
                     method: 'POST',
                     headers: ep.headers,
                     body: JSON.stringify(testPing),
-                    signal: AbortSignal.timeout(3000)
+                    signal: AbortSignal.timeout(5000)
                   });
 
                   if (pingRes.ok) {
@@ -262,9 +265,9 @@ function recordApiCall() {
   apiCallTimestamps.push(Date.now());
 }
 
-function tripCircuitBreaker(durationMinutes = 15) {
-  circuitBreakerTrippedUntil = Date.now() + durationMinutes * 60 * 1000;
-  console.warn(`[BillingGuard] ⚡ Circuit breaker TRIPPED for ${durationMinutes} minutes due to API error/rate-limit. Offline decks active.`);
+function tripCircuitBreaker(durationSeconds = 30) {
+  circuitBreakerTrippedUntil = Date.now() + durationSeconds * 1000;
+  console.warn(`[BillingGuard] ⚡ Circuit breaker TRIPPED for ${durationSeconds}s due to API rate-limit (429). Offline decks active temporarily.`);
 }
 
 export async function generateWordTriplet(theme = 'Random Mix') {
@@ -328,7 +331,10 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
 }`;
 
   const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{
+      role: 'user',
+      parts: [{ text: prompt }]
+    }],
     generationConfig: { temperature: 0.95, topP: 0.95 }
   };
 
@@ -350,7 +356,7 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(6000)
+      signal: AbortSignal.timeout(10000)
     });
 
     if (response.ok) {
@@ -387,9 +393,9 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
         cachedAuthConfig = null;
       }
 
-      // If rate limited by Google (429) or quota exceeded, trip circuit breaker to protect from retries
+      // If rate limited by Google (429) or quota exceeded, trip circuit breaker for 30s to protect from spamming
       if (response.status === 429) {
-        tripCircuitBreaker(15);
+        tripCircuitBreaker(30);
       }
     }
   } catch (err) {

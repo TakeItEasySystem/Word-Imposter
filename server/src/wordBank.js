@@ -819,6 +819,114 @@ export const WORD_SETS = [
       "Where on Earth (or off Earth) do they conduct dangerous field research?",
       "What ancient fossils, space rocks, or deep sea creatures do they discover?"
     ]
+  },
+
+  // -------------------------------------------------------------
+  // 🦸 MARVEL, AVENGERS, DC & COMIC HEROES EXPANSION
+  // -------------------------------------------------------------
+  {
+    category: "Marvel Superheroes",
+    words: ["Iron Man", "Captain America", "Thor"],
+    questions: [
+      "What signature weapon (Mjolnir, vibranium shield, arc reactor) makes them unstoppable?",
+      "Are they a founding leader of the Avengers or an ancient cosmic thunder god?"
+    ]
+  },
+  {
+    category: "Marvel Superheroes",
+    words: ["Spider-Man", "Doctor Strange", "Black Panther"],
+    questions: [
+      "Does this hero defend New York neighborhood streets, mystical sanctums, or the nation of Wakanda?",
+      "What animal motif or mystic eye of Agamotto defines their superhero style?"
+    ]
+  },
+  {
+    category: "Marvel Superheroes",
+    words: ["Wolverine", "Deadpool", "Cyclops"],
+    questions: [
+      "What mutant ability (healing factor, adamantium claws, or laser optic blasts) makes them lethal?",
+      "Are they an official X-Men leader or a chaotic fourth-wall-breaking mercenary?"
+    ]
+  },
+  {
+    category: "Marvel Avengers",
+    words: ["Hulk", "Black Widow", "Hawkeye"],
+    questions: [
+      "Do they smash everything with raw green muscle or strike silently with arrows and spycraft?",
+      "What tragic past or anger management struggle shapes their hero journey?"
+    ]
+  },
+  {
+    category: "Marvel Cosmic & Guardians",
+    words: ["Star-Lord", "Groot", "Rocket Raccoon"],
+    questions: [
+      "What mixtape music, wooden bark phrase, or heavy blaster weapon is their trademark?",
+      "How did this ragtag crew end up guarding the galaxy together?"
+    ]
+  },
+  {
+    category: "DC Superheroes",
+    words: ["Batman", "Superman", "Wonder Woman"],
+    questions: [
+      "Is this icon empowered by the yellow sun, an Amazonian lasso of truth, or dark knight gadgets in Gotham?",
+      "What legendary hero insignia is emblazoned on their chest?"
+    ]
+  },
+  {
+    category: "DC Superheroes",
+    words: ["The Flash", "Aquaman", "Green Lantern"],
+    questions: [
+      "Does this hero sprint through the Speed Force, rule the ocean realm of Atlantis, or possess an emerald power ring?",
+      "What unique power source (lightning, sea water, willpower) fuels their battle style?"
+    ]
+  },
+  {
+    category: "Cricket Legends",
+    words: ["Virat Kohli", "MS Dhoni", "Sachin Tendulkar"],
+    questions: [
+      "What iconic jersey number (18, 7, 10) or legendary match-winning shot are they celebrated for?",
+      "What World Cup final trophy or masterclass century made them an icon in sports history?"
+    ]
+  },
+  {
+    category: "Football GOATs",
+    words: ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappé"],
+    questions: [
+      "What signature goal celebration (Siuuu, pointing to the heavens, folded arms) defines their greatness?",
+      "In which World Cup or Champions League final did they deliver a historic masterclass?"
+    ]
+  },
+  {
+    category: "Bollywood Superstars",
+    words: ["Shah Rukh Khan", "Salman Khan", "Aamir Khan"],
+    questions: [
+      "What signature pose (open arms, swag entry, perfectionist transformation) is their trademark?",
+      "What record-breaking all-time blockbuster movie made them an Indian cinema icon?"
+    ]
+  },
+  {
+    category: "Tech Giants",
+    words: ["Google", "Apple", "Microsoft"],
+    questions: [
+      "What operating system (Android, iOS, Windows) or smartphone hardware is their crown jewel?",
+      "In what Silicon Valley garage or computer lab was this multi-trillion dollar company born?"
+    ]
+  },
+  {
+    category: "Programming Languages",
+    words: ["Python", "JavaScript", "C++"],
+    questions: [
+      "Is this language used for AI and data science, browser frontends, or game engines and memory management?",
+      "What syntax quirks (whitespace indentation, triple equals '===', pointer arrows) do programmers argue about?"
+    ]
+  },
+  {
+    category: "Fast Food Chains",
+    words: ["McDonald's", "Burger King", "KFC"],
+    questions: [
+      "What famous burger, bucket of secret herbs & spices, or golden logo greets customers?",
+      "What classic toy or combo meal is famously ordered at their drive-thru window?"
+    ]
   }
 ];
 
@@ -829,6 +937,76 @@ export const FALLBACK_QUESTIONS = [
   "What is the biggest mistake someone could make when dealing with this?",
   "If you had to describe its texture or feel in one phrase, what would it be?"
 ];
+
+// Stop words to ignore when tokenizing user themes
+const STOP_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'with',
+  'by', 'about', 'like', 'through', 'over', 'before', 'after', 'all', 'any', 'is', 'are'
+]);
+
+function normalizeStem(word) {
+  let s = (word || '').toLowerCase().trim();
+  if (s.endsWith('ies')) s = s.slice(0, -3) + 'y';
+  else if (s.endsWith('es') && !s.endsWith('ies')) s = s.slice(0, -2);
+  else if (s.endsWith('s') && !s.endsWith('ss')) s = s.slice(0, -1);
+  return s;
+}
+
+function extractTokens(str) {
+  if (!str || typeof str !== 'string') return [];
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length > 1 && !STOP_WORDS.has(t));
+}
+
+function scoreSetForTheme(set, cleanTheme, themeTokens, themeStems) {
+  let score = 0;
+  const catLower = set.category.toLowerCase();
+  const catTokens = extractTokens(catLower);
+  const catStems = catTokens.map(normalizeStem);
+  const wordsLower = set.words.map(w => w.toLowerCase());
+
+  // 1. Exact or whole-string category matches
+  if (catLower === cleanTheme) score += 120;
+  else if (catLower.includes(cleanTheme)) score += 90;
+  else if (cleanTheme.includes(catLower)) score += 80;
+
+  // 2. Token overlap with Category
+  for (let i = 0; i < themeTokens.length; i++) {
+    const t = themeTokens[i];
+    const s = themeStems[i];
+
+    if (catTokens.includes(t)) {
+      score += 50; // Exact token match in category name (e.g. "marvel", "heroes")
+    } else if (catStems.includes(s)) {
+      score += 40; // Stem match (e.g. hero / heroes / superhero)
+    } else if (catLower.includes(t) || catLower.includes(s)) {
+      score += 30; // Substring in category
+    }
+
+    if (catTokens.some(ct => ct.includes(t) || ct.includes(s) || t.includes(ct) || s.includes(ct))) {
+      score += 25;
+    }
+  }
+
+  // 3. Token and theme overlap with Words in the set
+  if (wordsLower.some(w => w === cleanTheme)) score += 100;
+  if (wordsLower.some(w => cleanTheme.includes(w) || w.includes(cleanTheme))) score += 50;
+
+  for (let i = 0; i < themeTokens.length; i++) {
+    const t = themeTokens[i];
+    const s = themeStems[i];
+    for (const w of wordsLower) {
+      if (w.includes(t) || (s.length > 2 && w.includes(s))) {
+        score += 30;
+      }
+    }
+  }
+
+  return score;
+}
 
 // Session deck-shuffle engine: guarantees 0 repeats until all sets in the bank are played
 export class WordDeck {
@@ -852,10 +1030,7 @@ export class WordDeck {
     }
 
     if (theme && theme !== "Random Mix" && theme !== "Random Surprise") {
-      const matching = this.deck.find(set => 
-        set.category.toLowerCase().includes(theme.toLowerCase())
-      );
-      if (matching) return matching;
+      return getRandomWordSet(theme);
     }
 
     const set = this.deck[this.currentIndex];
@@ -870,27 +1045,40 @@ export function getRandomWordSet(theme = null) {
 
   if (theme && theme !== "Random Mix" && theme !== "Random Surprise") {
     const clean = theme.toLowerCase().trim();
+    const themeTokens = extractTokens(clean);
+    const themeStems = themeTokens.map(normalizeStem);
 
-    // 1. Direct or partial category match among unused decks
-    const matching = masterPool.filter(set =>
-      set.category.toLowerCase().includes(clean) || clean.includes(set.category.toLowerCase())
-    );
-    if (matching.length > 0) {
-      return matching[Math.floor(Math.random() * matching.length)];
+    // Score all sets in WORD_SETS for relevance to the requested theme
+    const scoredSets = WORD_SETS.map(set => ({
+      set,
+      score: scoreSetForTheme(set, clean, themeTokens, themeStems)
+    })).filter(item => item.score > 0).sort((a, b) => b.score - a.score);
+
+    if (scoredSets.length > 0) {
+      const maxScore = scoredSets[0].score;
+      // Top matches: sets with score within 70% of maxScore or within 20 points
+      const topMatches = scoredSets
+        .filter(s => s.score >= maxScore * 0.7 || s.score >= maxScore - 20)
+        .map(s => s.set);
+
+      // Prioritize unused matching decks so players get fresh words
+      const unusedTopMatches = topMatches.filter(set => !historyManager.hasUsedWords(set.words));
+      const chosen = unusedTopMatches.length > 0
+        ? unusedTopMatches[Math.floor(Math.random() * unusedTopMatches.length)]
+        : topMatches[Math.floor(Math.random() * topMatches.length)];
+
+      console.log(`[WordBank] 🎯 Matched theme "${theme}" to deck "${chosen.category}" (Score: ${maxScore}, Words: ${chosen.words.join(', ')})`);
+      return {
+        category: chosen.category,
+        words: chosen.words,
+        questions: chosen.questions
+      };
     }
 
-    // 2. Keyword match inside word decks among unused decks
-    const keywordMatching = masterPool.filter(set =>
-      set.words.some(w => w.toLowerCase().includes(clean) || clean.includes(w.toLowerCase()))
-    );
-    if (keywordMatching.length > 0) {
-      return keywordMatching[Math.floor(Math.random() * keywordMatching.length)];
-    }
-
-    // 3. Fallback for custom topic: pick an unused deck from masterPool and preserve the custom category title
+    console.warn(`[WordBank] ⚠️ No offline decks matched theme "${theme}". Using random unused deck.`);
     const chosen = masterPool[Math.floor(Math.random() * masterPool.length)];
     return {
-      category: theme,
+      category: chosen.category,
       words: chosen.words,
       questions: chosen.questions
     };

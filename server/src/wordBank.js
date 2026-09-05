@@ -1,3 +1,5 @@
+import { historyManager } from './historyManager.js';
+
 export const WORD_SETS = [
   // -------------------------------------------------------------
   // 💀 GEN Z, INTERNET MEMES & BRAINROT LORE
@@ -863,33 +865,37 @@ export class WordDeck {
 }
 
 export function getRandomWordSet(theme = null) {
+  const unusedAll = WORD_SETS.filter(set => !historyManager.hasUsedWords(set.words));
+  const masterPool = unusedAll.length > 0 ? unusedAll : WORD_SETS;
+
   if (theme && theme !== "Random Mix" && theme !== "Random Surprise") {
     const clean = theme.toLowerCase().trim();
-    // 1. Direct or partial category match
-    const matching = WORD_SETS.filter(set =>
+
+    // 1. Direct or partial category match among unused decks
+    const matching = masterPool.filter(set =>
       set.category.toLowerCase().includes(clean) || clean.includes(set.category.toLowerCase())
     );
     if (matching.length > 0) {
       return matching[Math.floor(Math.random() * matching.length)];
     }
 
-    // 2. Keyword match inside word decks
-    const keywordMatching = WORD_SETS.filter(set =>
+    // 2. Keyword match inside word decks among unused decks
+    const keywordMatching = masterPool.filter(set =>
       set.words.some(w => w.toLowerCase().includes(clean) || clean.includes(w.toLowerCase()))
     );
     if (keywordMatching.length > 0) {
       return keywordMatching[Math.floor(Math.random() * keywordMatching.length)];
     }
 
-    // 3. Fallback for custom topic: preserve the user's custom category title
-    const index = Math.floor(Math.random() * WORD_SETS.length);
-    const chosen = WORD_SETS[index];
+    // 3. Fallback for custom topic: pick an unused deck from masterPool and preserve the custom category title
+    const chosen = masterPool[Math.floor(Math.random() * masterPool.length)];
     return {
       category: theme,
       words: chosen.words,
       questions: chosen.questions
     };
   }
-  const index = Math.floor(Math.random() * WORD_SETS.length);
-  return WORD_SETS[index];
+
+  const chosen = masterPool[Math.floor(Math.random() * masterPool.length)];
+  return chosen;
 }

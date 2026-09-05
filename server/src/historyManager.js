@@ -68,6 +68,12 @@ class HistoryManager {
     this.saveHistory();
   }
 
+  hasUsedWords(words = []) {
+    if (!Array.isArray(words) || words.length === 0) return false;
+    const recent = this.history.slice(-80).map(w => (w || '').toLowerCase());
+    return words.some(w => recent.includes((w || '').toLowerCase()));
+  }
+
   clearHistory() {
     this.history = [];
     this.saveHistory();

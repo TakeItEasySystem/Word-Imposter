@@ -219,10 +219,7 @@ const MAX_CALLS_PER_DAY = 300;
 const apiCallTimestamps = [];
 let circuitBreakerTrippedUntil = 0;
 
-// In-Memory 24-Hour Theme Cache (Prevents repeated API costs for common themes)
-const themeResponseCache = new Map(); // normalizedTheme -> { data, timestamp }
-const THEME_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
+// Quota and circuit breaker tracking (never caches identical triplets so players always get fresh words)
 function checkBillingQuotaAllowed() {
   const now = Date.now();
 
@@ -272,17 +269,8 @@ function tripCircuitBreaker(durationMinutes = 15) {
 
 export async function generateWordTriplet(theme = 'Random Mix') {
   const cleanTheme = (theme || 'Random Mix').trim();
-  const normalizedKey = cleanTheme.toLowerCase();
 
-  // 1. Check In-Memory Theme Cache (0 API Calls, $0 Cloud Cost)
-  const cached = themeResponseCache.get(normalizedKey);
-  if (cached && Date.now() - cached.timestamp < THEME_CACHE_TTL_MS) {
-    console.log(`[BillingGuard] ⚡ Theme Cache HIT for "${cleanTheme}". Returning cached word set (0 API calls, $0 cost).`);
-    historyManager.recordUsedWords(cached.data.words);
-    return cached.data;
-  }
-
-  // 2. Enforce Financial Billing Quota Hard-Caps
+  // 1. Enforce Financial Billing Quota Hard-Caps
   if (!checkBillingQuotaAllowed()) {
     const fallbackSet = getRandomWordSet(cleanTheme);
     historyManager.recordUsedWords(fallbackSet.words);
@@ -341,7 +329,7 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
 
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.85, topP: 0.95 }
+    generationConfig: { temperature: 0.95, topP: 0.95 }
   };
 
   const url = authConfig.strategy === 'Query'
@@ -385,9 +373,6 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
         };
 
         historyManager.recordUsedWords(generated.words);
-        
-        // Cache this generated result
-        themeResponseCache.set(normalizedKey, { data: generated, timestamp: Date.now() });
 
         console.log(`[AIGenerator] ✨ Model (${authConfig.modelName}) generated triplet for "${safeThemeName}":`, generated.words);
         return generated;

@@ -163,8 +163,8 @@ io.on('connection', (socket) => {
   });
 
   // Start Game (Host verified)
-  socket.on('start-game', ({ roomCode }) => {
-    gameManager.startGame(roomCode, socket.id);
+  socket.on('start-game', ({ roomCode, customTheme }) => {
+    gameManager.startGame(roomCode, socket.id, customTheme);
   });
 
   // Submit Answer (Q1 or Q2)

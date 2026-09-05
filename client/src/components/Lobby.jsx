@@ -14,6 +14,7 @@ export default function Lobby({ gameState }) {
   const [selectedTheme, setSelectedTheme] = useState('Random Mix');
   const [customThemeInput, setCustomThemeInput] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isStartingLocal, setIsStartingLocal] = useState(false);
 
   const isInsideRoom = !!gameState?.code;
   const isHost = gameState?.hostId === gameState?.myPlayerId;
@@ -42,14 +43,16 @@ export default function Lobby({ gameState }) {
     setSelectedTheme(themeName);
     if (themeName !== 'Custom') {
       socket.emit('update-theme', { roomCode: gameState.code, theme: themeName });
+    } else if (customThemeInput.trim()) {
+      socket.emit('update-theme', { roomCode: gameState.code, theme: customThemeInput.trim() });
     }
   };
 
-  const handleCustomThemeSubmit = (e) => {
-    e.preventDefault();
-    if (!customThemeInput.trim()) return;
-    playPop();
-    socket.emit('update-theme', { roomCode: gameState.code, theme: customThemeInput.trim() });
+  const handleCustomThemeChange = (val) => {
+    setCustomThemeInput(val);
+    if (val.trim()) {
+      socket.emit('update-theme', { roomCode: gameState.code, theme: val.trim() });
+    }
   };
 
   const handleAddBot = () => {
@@ -71,8 +74,17 @@ export default function Lobby({ gameState }) {
   };
 
   const handleStartGame = () => {
+    if (isStartingLocal || gameState?.isStarting) return;
     playPop();
-    socket.emit('start-game', { roomCode: gameState.code });
+    setIsStartingLocal(true);
+
+    const activeTheme = selectedTheme === 'Custom'
+      ? (customThemeInput.trim() || gameState.theme || 'Random Mix')
+      : selectedTheme;
+
+    // Emit live theme update and pass customTheme in start-game payload
+    socket.emit('update-theme', { roomCode: gameState.code, theme: activeTheme });
+    socket.emit('start-game', { roomCode: gameState.code, customTheme: activeTheme });
   };
 
   const handleRoundsChange = (e) => {
@@ -419,22 +431,19 @@ export default function Lobby({ gameState }) {
                   </select>
 
                   {selectedTheme === 'Custom' && (
-                    <form onSubmit={handleCustomThemeSubmit} className="flex space-x-2 pt-1">
+                    <div className="space-y-1.5 pt-1">
                       <input
                         type="text"
-                        placeholder="e.g. Hogwarts, K-Pop, 90s Cars..."
+                        placeholder="Type any custom topic (e.g. Hogwarts, Bollywood, 90s Cars)..."
                         value={customThemeInput}
-                        onChange={(e) => setCustomThemeInput(e.target.value)}
+                        onChange={(e) => handleCustomThemeChange(e.target.value)}
                         maxLength={40}
-                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 font-mono"
+                        className="w-full bg-white border-2 border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 font-mono font-semibold shadow-inner"
                       />
-                      <button
-                        type="submit"
-                        className="px-3 py-1.5 btn-primary-dark text-xs font-mono font-bold rounded-xl"
-                      >
-                        Set
-                      </button>
-                    </form>
+                      <p className="text-[10px] font-mono text-emerald-600 flex items-center space-x-1 font-bold">
+                        <span>✓ Custom topic active & ready</span>
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -448,16 +457,32 @@ export default function Lobby({ gameState }) {
             {isHost ? (
               <button
                 onClick={handleStartGame}
-                disabled={playerCount < 3}
-                className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-4 font-mono font-bold text-sm uppercase tracking-wider"
+                disabled={playerCount < 3 || isStartingLocal || gameState?.isStarting}
+                className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-4 font-mono font-bold text-sm uppercase tracking-wider disabled:opacity-80 cursor-pointer transition"
               >
-                <Play className="w-5 h-5 fill-current" />
-                <span>BEGIN INVESTIGATION</span>
+                {(isStartingLocal || gameState?.isStarting) ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    <span>LAUNCHING INVESTIGATION...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 fill-current" />
+                    <span>BEGIN INVESTIGATION</span>
+                  </>
+                )}
               </button>
             ) : (
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-slate-500 text-xs font-mono font-bold animate-pulse mt-4">
-                Waiting for Lead Detective to start...
-              </div>
+              gameState?.isStarting ? (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center text-amber-900 text-xs font-mono font-bold animate-pulse mt-4 flex items-center justify-center space-x-2">
+                  <span className="w-4 h-4 border-2 border-amber-800 border-t-transparent rounded-full animate-spin" />
+                  <span>Lead Detective started the game! Setting up case dossier...</span>
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-slate-500 text-xs font-mono font-bold animate-pulse mt-4">
+                  Waiting for Lead Detective to start...
+                </div>
+              )
             )}
           </div>
         </div>

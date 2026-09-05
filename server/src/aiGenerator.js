@@ -130,7 +130,8 @@ async function getWorkingAuthConfig(apiKey, force = false) {
                   const pingRes = await fetch(pingUrl, {
                     method: 'POST',
                     headers: ep.headers,
-                    body: JSON.stringify(testPing)
+                    body: JSON.stringify(testPing),
+                    signal: AbortSignal.timeout(3000)
                   });
 
                   if (pingRes.ok) {
@@ -360,7 +361,8 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no back
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000)
     });
 
     if (response.ok) {

@@ -336,7 +336,7 @@ export class GameManager {
     this.emitRoomState(roomCode);
   }
 
-  startGame(roomCode, callerSocketId = null) {
+  startGame(roomCode, callerSocketId = null, customTheme = null) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
     if (callerSocketId && !verifyHost(room, callerSocketId)) {
@@ -349,78 +349,95 @@ export class GameManager {
       return;
     }
 
-    // Cooldown check between starting rounds (prevent spam)
-    const now = Date.now();
-    if (now - (room.lastRoundStartTime || 0) < 5000) {
-      return;
+    // Apply custom theme if provided in start-game payload
+    if (customTheme && typeof customTheme === 'string' && customTheme.trim()) {
+      room.theme = sanitizeText(customTheme, 60);
+      console.log(`[GameManager] Starting room ${roomCode} with custom theme: "${room.theme}"`);
     }
+
+    // Cooldown / single-click lock check
+    const now = Date.now();
+    if (room.isStarting) {
+      return; // Already in the process of starting
+    }
+    room.isStarting = true;
     room.lastRoundStartTime = now;
     room.lastActivity = now;
+
+    // Immediately broadcast isStarting = true so all players see the loading state on one click
+    this.emitRoomState(roomCode);
 
     room.currentRound = 1;
     this.startRound(room);
   }
 
   async startRound(room) {
-    const wordSet = await generateWordTriplet(room.theme);
-    const shuffledWords = [...wordSet.words].sort(() => 0.5 - Math.random());
-    
-    // Pick Common word (3 players) and Imposter word (1 player)
-    const commonWord = shuffledWords[0];
-    const imposterWord = shuffledWords[1];
-    const unassignedWord = shuffledWords[2];
+    try {
+      const wordSet = await generateWordTriplet(room.theme);
+      const shuffledWords = [...wordSet.words].sort(() => 0.5 - Math.random());
+      
+      // Pick Common word (3 players) and Imposter word (1 player)
+      const commonWord = shuffledWords[0];
+      const imposterWord = shuffledWords[1];
+      const unassignedWord = shuffledWords[2];
 
-    // Pick 1 random player as Imposter
-    const imposterIndex = Math.floor(Math.random() * room.players.length);
-    const imposterPlayer = room.players[imposterIndex];
+      // Pick 1 random player as Imposter
+      const imposterIndex = Math.floor(Math.random() * room.players.length);
+      const imposterPlayer = room.players[imposterIndex];
 
-    room.players.forEach((p, idx) => {
-      p.answers = { q1: '', q2: '' };
-      p.drawing = '';
-      p.isDrawingSubmitted = false;
-      p.vote = null;
-      p.ready = false;
-      if (idx === imposterIndex) {
-        p.role = 'IMPOSTER';
-        p.assignedWord = imposterWord;
-      } else {
-        p.role = 'CIVILIAN';
-        p.assignedWord = commonWord;
-      }
-    });
+      room.players.forEach((p, idx) => {
+        p.answers = { q1: '', q2: '' };
+        p.drawing = '';
+        p.isDrawingSubmitted = false;
+        p.vote = null;
+        p.ready = false;
+        if (idx === imposterIndex) {
+          p.role = 'IMPOSTER';
+          p.assignedWord = imposterWord;
+        } else {
+          p.role = 'CIVILIAN';
+          p.assignedWord = commonWord;
+        }
+      });
 
-    room.roundData = {
-      category: wordSet.category,
-      candidateWords: shuffledWords, // 3 visible words to EVERYONE
-      commonWord: commonWord,
-      imposterWord: imposterWord,
-      unassignedWord: unassignedWord,
-      imposterId: imposterPlayer.id,
-      imposterName: imposterPlayer.name,
-      questions: wordSet.questions,
-      votes: {},
-      roundScores: {},
-      imposterCaught: false,
-      imposterGuessBonus: false,
-      history: []
-    };
+      room.roundData = {
+        category: wordSet.category || room.theme || 'Investigation',
+        candidateWords: shuffledWords, // 3 visible words to EVERYONE
+        commonWord: commonWord,
+        imposterWord: imposterWord,
+        unassignedWord: unassignedWord,
+        imposterId: imposterPlayer.id,
+        imposterName: imposterPlayer.name,
+        questions: wordSet.questions,
+        votes: {},
+        roundScores: {},
+        imposterCaught: false,
+        imposterGuessBonus: false,
+        history: []
+      };
 
-    room.state = 'WORD_REVEAL';
-    this.emitRoomState(room.code);
+      room.isStarting = false;
+      room.state = 'WORD_REVEAL';
+      this.emitRoomState(room.code);
 
-    // Authoritative Server-Side Timer: 15s to view secret dossier
-    this.startTimer(room, 15, () => {
-      console.log(`[Timer] WORD_REVEAL expired for room ${room.code}. Auto-advancing.`);
-      room.players.forEach(p => { p.ready = true; });
-      this.startQuestion1(room);
-    });
+      // Authoritative Server-Side Timer: 15s to view secret dossier
+      this.startTimer(room, 15, () => {
+        console.log(`[Timer] WORD_REVEAL expired for room ${room.code}. Auto-advancing.`);
+        room.players.forEach(p => { p.ready = true; });
+        this.startQuestion1(room);
+      });
 
-    // Bots auto-ready
-    room.players.filter(p => p.isBot).forEach(bot => {
-      setTimeout(() => {
-        this.playerReady(room.code, bot.id);
-      }, 1500);
-    });
+      // Bots auto-ready
+      room.players.filter(p => p.isBot).forEach(bot => {
+        setTimeout(() => {
+          this.playerReady(room.code, bot.id);
+        }, 1500);
+      });
+    } catch (err) {
+      console.error(`[GameManager] Error starting round in room ${room.code}:`, err);
+      room.isStarting = false;
+      this.emitRoomState(room.code);
+    }
   }
 
   playerReady(roomCode, socketId) {
@@ -992,6 +1009,7 @@ export class GameManager {
         code: room.code,
         hostId: room.hostId,
         state: room.state,
+        isStarting: !!room.isStarting,
         currentRound: room.currentRound,
         totalRounds: room.totalRounds,
         theme: room.theme || 'Random Mix',

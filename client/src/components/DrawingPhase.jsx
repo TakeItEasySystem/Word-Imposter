@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { CheckCircle2, Users, Send, PenTool, Clock, Folder, Lock } from 'lucide-react';
+import { CheckCircle2, Users, Send, PenTool, Clock } from 'lucide-react';
 import DrawingCanvas from './DrawingCanvas';
+import PinnedWordBanner from './PinnedWordBanner';
 
 export default function DrawingPhase({ gameState }) {
   const [currentDrawing, setCurrentDrawing] = useState(null);
@@ -36,18 +37,9 @@ export default function DrawingPhase({ gameState }) {
   const submittedCount = gameState?.players?.filter(p => p.hasSubmittedDrawing).length || 0;
 
   return (
-    <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-4">
-      {/* Compact Topic & Secret Word Reminder */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-mono">
-        <div className="flex items-center space-x-2 text-slate-500">
-          <Folder className="w-3.5 h-3.5 text-slate-400" />
-          <span>TOPIC: <strong className="text-slate-800 uppercase">{category}</strong></span>
-        </div>
-        <div className="flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1 rounded-full font-bold">
-          <Lock className="w-3 h-3 text-slate-300" />
-          <span>YOUR WORD: <strong className="uppercase">{gameState?.myWord}</strong></span>
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto my-4 px-4 animate-fade-in space-y-4">
+      {/* Pinned Secret Word Bar */}
+      <PinnedWordBanner myWord={gameState?.myWord} category={category} />
 
       {/* Main Drawing Card */}
       <div className="clean-card rounded-3xl p-5 sm:p-7 border-2 border-slate-200 space-y-5 shadow-sm">

@@ -96,68 +96,61 @@ export default function Lobby({ gameState }) {
     return (
       <div className="max-w-md mx-auto my-8 px-4 animate-fade-in">
         
-        {/* Game Logo & Intro */}
-        <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-white border-2 border-slate-200 rounded-3xl shadow-md mb-4 transform hover:scale-105 transition">
-            <span className="text-5xl">🕵️‍♂️</span>
-          </div>
-          <div className="flex items-center justify-center space-x-2 mb-1">
-            <span className="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
-              TOP SECRET DOSSIER
-            </span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
-            WORD IMPOSTER
+        {/* Game Title & Intro */}
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-2">🕵️‍♂️</div>
+          <h2 className="text-3xl font-heading font-extrabold text-slate-900 tracking-tight">
+            Word Imposter
           </h2>
-          <p className="text-slate-500 mt-2 text-xs sm:text-sm font-medium">
-            3 Clues on the Board. Detectives share the true word. 1 Imposter is bluffing.
+          <p className="text-slate-500 mt-1 text-xs sm:text-sm font-medium">
+            Find the imposter before they blend in!
           </p>
         </div>
 
-        {/* Card Container */}
-        <div className="clean-card p-6 sm:p-8 rounded-3xl shadow-sm border-2 border-slate-200">
+        {/* Clean Card Container */}
+        <div className="clean-card p-6 sm:p-7 rounded-3xl shadow-sm border-2 border-slate-200">
           
           {/* Tabs */}
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 border border-slate-200 font-mono">
+          <div className="flex bg-slate-100 p-1 rounded-2xl mb-5 border border-slate-200 font-mono">
             <button
               onClick={() => { setTab('create'); playPop(); }}
-              className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
+              className={`flex-1 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
                 tab === 'create'
                   ? 'bg-white text-slate-900 shadow-sm font-extrabold'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Open New Case
+              Create Room
             </button>
             <button
               onClick={() => { setTab('join'); playPop(); }}
-              className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
+              className={`flex-1 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition ${
                 tab === 'join'
                   ? 'bg-white text-slate-900 shadow-sm font-extrabold'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Join Case
+              Join Room
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={tab === 'create' ? handleCreateRoom : handleJoinRoom} className="space-y-5">
+          <form onSubmit={tab === 'create' ? handleCreateRoom : handleJoinRoom} className="space-y-4">
             
-            {/* Avatar Picker */}
+            {/* Clean Avatar Row */}
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-2">
-                Agent / Suspect Identity:
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-2">
+                Choose Avatar:
               </label>
-              <div className="grid grid-cols-6 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                {AVATARS.map((av) => (
+              <div className="flex justify-between bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                {['🕵️', '🦊', '🐼', '🤖', '🚀', '🦄'].map((av) => (
                   <button
                     type="button"
                     key={av}
                     onClick={() => { setSelectedAvatar(av); playPop(); }}
-                    className={`h-11 rounded-xl text-2xl flex items-center justify-center transition ${
+                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition ${
                       selectedAvatar === av
-                        ? 'bg-white scale-110 shadow-md ring-2 ring-slate-900'
+                        ? 'bg-white scale-110 shadow-sm ring-2 ring-slate-900'
                         : 'hover:bg-slate-200/60'
                     }`}
                   >
@@ -169,25 +162,25 @@ export default function Lobby({ gameState }) {
 
             {/* Nickname Input */}
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Detective / Suspect Alias:
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-1">
+                Your Nickname:
               </label>
               <input
                 type="text"
-                placeholder="e.g. Agent Rishi, Sherlock, Spade"
+                placeholder="Enter your name"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 maxLength={16}
                 required
-                className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition text-base"
+                className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition text-sm"
               />
             </div>
 
             {/* Room Code Input (If Join Tab) */}
             {tab === 'join' && (
               <div>
-                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                  4-Letter Case ID:
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  4-Letter Room Code:
                 </label>
                 <input
                   type="text"
@@ -196,7 +189,7 @@ export default function Lobby({ gameState }) {
                   onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                   maxLength={4}
                   required
-                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-mono font-extrabold text-center tracking-widest text-xl placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition uppercase"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-900 font-mono font-extrabold text-center tracking-widest text-lg placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition uppercase"
                 />
               </div>
             )}
@@ -204,9 +197,9 @@ export default function Lobby({ gameState }) {
             {/* Action Button */}
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-2 font-mono uppercase tracking-wider text-sm"
+              className="w-full py-3.5 rounded-2xl btn-primary-dark flex items-center justify-center space-x-2 mt-2 font-mono uppercase tracking-wider text-xs sm:text-sm font-bold shadow-sm"
             >
-              <span>{tab === 'create' ? 'OPEN INVESTIGATION CASE 🔍' : 'ACCESS CASE FILE 📂'}</span>
+              <span>{tab === 'create' ? 'CREATE ROOM 🎮' : 'JOIN ROOM 🚪'}</span>
             </button>
           </form>
 

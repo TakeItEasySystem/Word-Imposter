@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playVote, playPop } from '../utils/audio';
-import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, FileText, Palette, ShieldAlert, Clock, Folder, Lock } from 'lucide-react';
+import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, FileText, Palette, ShieldAlert, Clock } from 'lucide-react';
+import PinnedWordBanner from './PinnedWordBanner';
 
 export default function VotingPhase({ gameState }) {
   const [selectedVotedId, setSelectedVotedId] = useState(null);
@@ -29,18 +30,9 @@ export default function VotingPhase({ gameState }) {
   const votedCount = gameState?.players?.filter(p => p.hasVoted).length || 0;
 
   return (
-    <div className="max-w-6xl mx-auto my-6 px-4 animate-fade-in space-y-4">
-      {/* Compact Topic & Secret Word Reminder */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-mono">
-        <div className="flex items-center space-x-2 text-slate-500">
-          <Folder className="w-3.5 h-3.5 text-slate-400" />
-          <span>TOPIC: <strong className="text-slate-800 uppercase">{category}</strong></span>
-        </div>
-        <div className="flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1 rounded-full font-bold">
-          <Lock className="w-3 h-3 text-slate-300" />
-          <span>YOUR WORD: <strong className="uppercase">{gameState?.myWord}</strong></span>
-        </div>
-      </div>
+    <div className="max-w-6xl mx-auto my-4 px-4 animate-fade-in space-y-4">
+      {/* Pinned Secret Word Bar */}
+      <PinnedWordBanner myWord={gameState?.myWord} category={category} />
 
       {/* Investigation Header */}
       <div className="clean-card rounded-3xl p-5 sm:p-6 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { Palette, CheckCircle2, Users, Send, Lock, PenTool, ShieldAlert } from 'lucide-react';
+import { Palette, CheckCircle2, Users, Send, Lock, PenTool, ShieldAlert, Clock } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 import DrawingCanvas from './DrawingCanvas';
 
@@ -65,10 +65,25 @@ export default function DrawingPhase({ gameState }) {
           </div>
         </div>
 
-        {/* Progress Tracker */}
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold shrink-0">
-          <Users className="w-4 h-4 text-slate-800" />
-          <span>SKETCHES: <strong className="text-slate-900 font-extrabold">{submittedCount}</strong> / {totalPlayers}</span>
+        {/* Progress Tracker & Timer */}
+        <div className="flex items-center space-x-2.5 shrink-0">
+          {gameState?.timerSeconds > 0 && (
+            <div className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-black transition ${
+              gameState.timerSeconds <= 5
+                ? 'bg-red-600 text-white border-red-700 animate-pulse shadow-sm'
+                : gameState.timerSeconds <= 10
+                ? 'bg-amber-100 text-amber-900 border-amber-300'
+                : 'bg-slate-100 text-slate-800 border-slate-300'
+            }`}>
+              <Clock className="w-3.5 h-3.5" />
+              <span>⏱️ {gameState.timerSeconds}s</span>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 px-4 py-2 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold">
+            <Users className="w-4 h-4 text-slate-800" />
+            <span>SKETCHES: <strong className="text-slate-900 font-extrabold">{submittedCount}</strong> / {totalPlayers}</span>
+          </div>
         </div>
       </div>
 

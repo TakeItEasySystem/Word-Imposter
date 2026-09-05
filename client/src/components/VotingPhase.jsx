@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playVote, playPop } from '../utils/audio';
-import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, Search, FileText, Palette, ShieldAlert } from 'lucide-react';
+import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, Search, FileText, Palette, ShieldAlert, Clock } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function VotingPhase({ gameState }) {
@@ -58,10 +58,25 @@ export default function VotingPhase({ gameState }) {
           </div>
         </div>
 
-        {/* Live Vote Progress Counter */}
-        <div className="flex items-center space-x-2.5 px-4 py-2.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 font-mono font-bold text-sm shrink-0">
-          <Users className="w-4 h-4 text-slate-600" />
-          <span>VOTES CAST: <span className="text-slate-900 font-extrabold">{votedCount}</span> / {totalPlayers}</span>
+        {/* Live Vote Progress Counter & Timer */}
+        <div className="flex items-center space-x-2.5 shrink-0">
+          {gameState?.timerSeconds > 0 && (
+            <div className={`flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl border text-xs font-mono font-black transition ${
+              gameState.timerSeconds <= 5
+                ? 'bg-red-600 text-white border-red-700 animate-pulse shadow-md'
+                : gameState.timerSeconds <= 10
+                ? 'bg-amber-100 text-amber-900 border-amber-300'
+                : 'bg-slate-100 text-slate-800 border-slate-300'
+            }`}>
+              <Clock className="w-3.5 h-3.5" />
+              <span>⏱️ {gameState.timerSeconds}s</span>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2.5 px-4 py-2.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 font-mono font-bold text-sm">
+            <Users className="w-4 h-4 text-slate-600" />
+            <span>VOTES CAST: <span className="text-slate-900 font-extrabold">{votedCount}</span> / {totalPlayers}</span>
+          </div>
         </div>
       </div>
 

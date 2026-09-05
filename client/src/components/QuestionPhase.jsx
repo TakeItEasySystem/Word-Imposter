@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { HelpCircle, Send, CheckCircle2, Users, FileText, AlertTriangle } from 'lucide-react';
+import { HelpCircle, Send, CheckCircle2, Users, FileText, AlertTriangle, Clock } from 'lucide-react';
 import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function QuestionPhase({ gameState }) {
@@ -50,14 +50,29 @@ export default function QuestionPhase({ gameState }) {
       <div className="clean-card rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm relative">
         
         {/* Phase Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
           <span className="bg-slate-900 text-white text-xs font-mono font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-xs">
             {isQ1 ? 'INTERROGATION ROUND 01/02' : 'INTERROGATION ROUND 02/02'}
           </span>
 
-          <div className="flex items-center space-x-1.5 px-3.5 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold">
-            <Users className="w-3.5 h-3.5 text-slate-800" />
-            <span>ANSWERS: <strong className="text-slate-900 font-extrabold">{answeredCount}</strong> / {totalPlayers}</span>
+          <div className="flex items-center space-x-2">
+            {gameState?.timerSeconds > 0 && (
+              <div className={`flex items-center space-x-1.5 px-3.5 py-1 rounded-full border text-xs font-mono font-black transition ${
+                gameState.timerSeconds <= 5 
+                  ? 'bg-red-600 text-white border-red-700 animate-pulse shadow-xs' 
+                  : gameState.timerSeconds <= 10
+                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-slate-100 text-slate-800 border-slate-300'
+              }`}>
+                <Clock className="w-3.5 h-3.5" />
+                <span>⏱️ {gameState.timerSeconds}s</span>
+              </div>
+            )}
+
+            <div className="flex items-center space-x-1.5 px-3.5 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold">
+              <Users className="w-3.5 h-3.5 text-slate-800" />
+              <span>ANSWERS: <strong className="text-slate-900 font-extrabold">{answeredCount}</strong> / {totalPlayers}</span>
+            </div>
           </div>
         </div>
 

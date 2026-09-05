@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playVote, playPop } from '../utils/audio';
 import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, FileText, Palette, ShieldAlert, Clock } from 'lucide-react';
-import PinnedWordBanner from './PinnedWordBanner';
+import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function VotingPhase({ gameState }) {
   const [selectedVotedId, setSelectedVotedId] = useState(null);
@@ -11,7 +11,6 @@ export default function VotingPhase({ gameState }) {
   const myId = gameState?.myPlayerId;
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const alreadyVoted = myPlayer?.hasVoted || !!selectedVotedId;
-  const category = gameState?.roundData?.category || gameState?.theme || 'General Topic';
 
   const handleCastVote = (targetPlayerId) => {
     if (alreadyVoted || targetPlayerId === myId) return;
@@ -31,8 +30,8 @@ export default function VotingPhase({ gameState }) {
 
   return (
     <div className="max-w-6xl mx-auto my-4 px-4 animate-fade-in space-y-4">
-      {/* Pinned Secret Word Bar */}
-      <PinnedWordBanner myWord={gameState?.myWord} category={category} />
+      {/* 3 Candidate Words Pinned with Assigned Word Highlighted */}
+      <CandidateWordsBanner roundData={gameState?.roundData} myWord={gameState?.myWord} />
 
       {/* Investigation Header */}
       <div className="clean-card rounded-3xl p-5 sm:p-6 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">

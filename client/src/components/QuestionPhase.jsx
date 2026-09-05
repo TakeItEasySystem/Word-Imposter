@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
 import { Send, CheckCircle2, Users, FileText, Clock } from 'lucide-react';
-import PinnedWordBanner from './PinnedWordBanner';
+import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function QuestionPhase({ gameState }) {
   const [answerInput, setAnswerInput] = useState('');
@@ -12,7 +12,6 @@ export default function QuestionPhase({ gameState }) {
   const questionIndex = isQ1 ? 0 : 1;
   const questionKey = isQ1 ? 'q1' : 'q2';
   const questionText = gameState?.roundData?.questions?.[questionIndex] || "Answer honestly about your word:";
-  const category = gameState?.roundData?.category || gameState?.theme || 'General Topic';
 
   // Reset input state whenever phase changes between Q1 and Q2
   useEffect(() => {
@@ -41,8 +40,8 @@ export default function QuestionPhase({ gameState }) {
 
   return (
     <div className="max-w-3xl mx-auto my-4 px-4 animate-fade-in space-y-4">
-      {/* Pinned Secret Word Bar */}
-      <PinnedWordBanner myWord={gameState?.myWord} category={category} />
+      {/* 3 Candidate Words Pinned with Assigned Word Highlighted */}
+      <CandidateWordsBanner roundData={gameState?.roundData} myWord={gameState?.myWord} />
 
       <div className="clean-card rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm relative">
         

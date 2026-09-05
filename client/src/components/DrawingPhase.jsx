@@ -3,7 +3,7 @@ import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
 import { CheckCircle2, Users, Send, PenTool, Clock } from 'lucide-react';
 import DrawingCanvas from './DrawingCanvas';
-import PinnedWordBanner from './PinnedWordBanner';
+import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function DrawingPhase({ gameState }) {
   const [currentDrawing, setCurrentDrawing] = useState(null);
@@ -13,7 +13,6 @@ export default function DrawingPhase({ gameState }) {
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const alreadySubmitted = myPlayer?.hasSubmittedDrawing;
   const submitted = hasSubmitted || alreadySubmitted;
-  const category = gameState?.roundData?.category || gameState?.theme || 'General Topic';
 
   const handleCanvasChange = (dataUrl) => {
     setCurrentDrawing(dataUrl);
@@ -38,8 +37,8 @@ export default function DrawingPhase({ gameState }) {
 
   return (
     <div className="max-w-4xl mx-auto my-4 px-4 animate-fade-in space-y-4">
-      {/* Pinned Secret Word Bar */}
-      <PinnedWordBanner myWord={gameState?.myWord} category={category} />
+      {/* 3 Candidate Words Pinned with Assigned Word Highlighted */}
+      <CandidateWordsBanner roundData={gameState?.roundData} myWord={gameState?.myWord} />
 
       {/* Main Drawing Card */}
       <div className="clean-card rounded-3xl p-5 sm:p-7 border-2 border-slate-200 space-y-5 shadow-sm">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
 import { CheckCircle2, Lock, Folder } from 'lucide-react';
+import CandidateWordsBanner from './CandidateWordsBanner';
 
 export default function WordReveal({ gameState }) {
   const [isReady, setIsReady] = useState(false);
@@ -18,8 +19,11 @@ export default function WordReveal({ gameState }) {
   const readyCount = gameState?.players?.filter(p => p.ready).length || 0;
 
   return (
-    <div className="max-w-xl mx-auto my-8 px-4 animate-fade-in">
-      <div className="clean-card rounded-3xl p-6 sm:p-10 text-center border-2 border-slate-200 shadow-sm">
+    <div className="max-w-2xl mx-auto my-6 px-4 animate-fade-in space-y-4">
+      {/* 3 Candidate Words with Assigned Word Highlighted */}
+      <CandidateWordsBanner roundData={gameState?.roundData} myWord={myWord} />
+
+      <div className="clean-card rounded-3xl p-6 sm:p-8 text-center border-2 border-slate-200 shadow-sm">
         
         {/* Category Badge */}
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-bold uppercase tracking-wider mb-4">

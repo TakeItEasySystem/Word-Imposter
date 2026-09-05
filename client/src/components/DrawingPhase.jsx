@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playPop } from '../utils/audio';
-import { Palette, CheckCircle2, Users, Send, Lock, PenTool, ShieldAlert, Clock } from 'lucide-react';
-import CandidateWordsBanner from './CandidateWordsBanner';
+import { CheckCircle2, Users, Send, PenTool, Clock, Folder, Lock } from 'lucide-react';
 import DrawingCanvas from './DrawingCanvas';
 
 export default function DrawingPhase({ gameState }) {
@@ -13,6 +12,7 @@ export default function DrawingPhase({ gameState }) {
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const alreadySubmitted = myPlayer?.hasSubmittedDrawing;
   const submitted = hasSubmitted || alreadySubmitted;
+  const category = gameState?.roundData?.category || gameState?.theme || 'General Topic';
 
   const handleCanvasChange = (dataUrl) => {
     setCurrentDrawing(dataUrl);
@@ -36,70 +36,56 @@ export default function DrawingPhase({ gameState }) {
   const submittedCount = gameState?.players?.filter(p => p.hasSubmittedDrawing).length || 0;
 
   return (
-    <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-6">
-      {/* 3 Candidate Words Banner */}
-      <CandidateWordsBanner
-        roundData={gameState?.roundData}
-        myWord={gameState?.myWord}
-        showSecretHighlight={true}
-      />
-
-      {/* Drawing Phase Header */}
-      <div className="clean-card p-5 sm:p-6 rounded-3xl border-2 border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-slate-900 rounded-2xl text-white shadow-sm">
-            <PenTool className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2 mb-0.5">
-              <span className="text-[9px] font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200 uppercase tracking-wider">
-                EXHIBIT LAB • SECRET DRAWING
-              </span>
-            </div>
-            <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900">
-              Forensic Sketch Laboratory
-            </h2>
-            <p className="text-xs text-slate-500 font-mono">
-              Draw clues for your assigned lead: <strong className="text-slate-900 font-bold">{gameState?.myWord}</strong>. Sketches remain hidden until voting!
-            </p>
-          </div>
+    <div className="max-w-4xl mx-auto my-6 px-4 animate-fade-in space-y-4">
+      {/* Compact Topic & Secret Word Reminder */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-mono">
+        <div className="flex items-center space-x-2 text-slate-500">
+          <Folder className="w-3.5 h-3.5 text-slate-400" />
+          <span>TOPIC: <strong className="text-slate-800 uppercase">{category}</strong></span>
         </div>
-
-        {/* Progress Tracker & Timer */}
-        <div className="flex items-center space-x-2.5 shrink-0">
-          {gameState?.timerSeconds > 0 && (
-            <div className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-black transition ${
-              gameState.timerSeconds <= 5
-                ? 'bg-red-600 text-white border-red-700 animate-pulse shadow-sm'
-                : gameState.timerSeconds <= 10
-                ? 'bg-amber-100 text-amber-900 border-amber-300'
-                : 'bg-slate-100 text-slate-800 border-slate-300'
-            }`}>
-              <Clock className="w-3.5 h-3.5" />
-              <span>⏱️ {gameState.timerSeconds}s</span>
-            </div>
-          )}
-
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold">
-            <Users className="w-4 h-4 text-slate-800" />
-            <span>SKETCHES: <strong className="text-slate-900 font-extrabold">{submittedCount}</strong> / {totalPlayers}</span>
-          </div>
+        <div className="flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1 rounded-full font-bold">
+          <Lock className="w-3 h-3 text-slate-300" />
+          <span>YOUR WORD: <strong className="uppercase">{gameState?.myWord}</strong></span>
         </div>
       </div>
 
-      {/* Centered Secret Drawing Board */}
-      <div className="clean-card rounded-3xl p-6 sm:p-8 border-2 border-slate-200 space-y-5 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400">SECRET LEAD</span>
-            <div className="font-mono font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-wider uppercase">
-              {gameState?.myWord}
+      {/* Main Drawing Card */}
+      <div className="clean-card rounded-3xl p-5 sm:p-7 border-2 border-slate-200 space-y-5 shadow-sm">
+        
+        {/* Unified Card Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-slate-900 rounded-2xl text-white shadow-sm">
+              <PenTool className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-heading font-extrabold text-lg sm:text-xl text-slate-900">
+                Draw Your Secret Clue
+              </h2>
+              <p className="text-xs text-slate-500 font-mono">
+                Your drawing is 100% private until voting begins.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-1.5 text-xs font-mono font-bold text-slate-700 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200">
-            <Lock className="w-3.5 h-3.5 text-slate-600" />
-            <span>CONFIDENTIAL // PRIVATE CANVAS</span>
+          <div className="flex items-center space-x-2 shrink-0">
+            {gameState?.timerSeconds > 0 && (
+              <div className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full border text-xs font-mono font-black transition ${
+                gameState.timerSeconds <= 5
+                  ? 'bg-red-600 text-white border-red-700 animate-pulse shadow-sm'
+                  : gameState.timerSeconds <= 10
+                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-slate-100 text-slate-800 border-slate-300'
+              }`}>
+                <Clock className="w-3.5 h-3.5" />
+                <span>⏱️ {gameState.timerSeconds}s</span>
+              </div>
+            )}
+
+            <div className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-xs font-mono font-bold">
+              <Users className="w-3.5 h-3.5 text-slate-800" />
+              <span>SKETCHES: <strong className="text-slate-900 font-extrabold">{submittedCount}</strong> / {totalPlayers}</span>
+            </div>
           </div>
         </div>
 

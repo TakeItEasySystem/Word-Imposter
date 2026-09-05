@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { socket } from '../utils/socket';
 import { playVote, playPop } from '../utils/audio';
-import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, Search, FileText, Palette, ShieldAlert, Clock } from 'lucide-react';
-import CandidateWordsBanner from './CandidateWordsBanner';
+import { Vote, CheckCircle2, ZoomIn, X, Users, AlertTriangle, FileText, Palette, ShieldAlert, Clock, Folder, Lock } from 'lucide-react';
 
 export default function VotingPhase({ gameState }) {
   const [selectedVotedId, setSelectedVotedId] = useState(null);
@@ -11,6 +10,7 @@ export default function VotingPhase({ gameState }) {
   const myId = gameState?.myPlayerId;
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const alreadyVoted = myPlayer?.hasVoted || !!selectedVotedId;
+  const category = gameState?.roundData?.category || gameState?.theme || 'General Topic';
 
   const handleCastVote = (targetPlayerId) => {
     if (alreadyVoted || targetPlayerId === myId) return;
@@ -29,31 +29,31 @@ export default function VotingPhase({ gameState }) {
   const votedCount = gameState?.players?.filter(p => p.hasVoted).length || 0;
 
   return (
-    <div className="max-w-6xl mx-auto my-6 px-4 animate-fade-in space-y-6">
-      {/* 3 Candidate Words Banner */}
-      <CandidateWordsBanner
-        roundData={gameState?.roundData}
-        myWord={gameState?.myWord}
-        showSecretHighlight={true}
-      />
+    <div className="max-w-6xl mx-auto my-6 px-4 animate-fade-in space-y-4">
+      {/* Compact Topic & Secret Word Reminder */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-mono">
+        <div className="flex items-center space-x-2 text-slate-500">
+          <Folder className="w-3.5 h-3.5 text-slate-400" />
+          <span>TOPIC: <strong className="text-slate-800 uppercase">{category}</strong></span>
+        </div>
+        <div className="flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1 rounded-full font-bold">
+          <Lock className="w-3 h-3 text-slate-300" />
+          <span>YOUR WORD: <strong className="uppercase">{gameState?.myWord}</strong></span>
+        </div>
+      </div>
 
       {/* Investigation Header */}
       <div className="clean-card rounded-3xl p-5 sm:p-6 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md">
-            <ShieldAlert className="w-7 h-7" />
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md">
+            <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[9px] font-mono font-bold tracking-wider text-red-600 uppercase px-2.5 py-0.5 bg-red-50 rounded-md border border-red-200">
-                PHASE 04 • JURY TRIBUNAL
-              </span>
-            </div>
-            <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight mt-0.5">
-              Suspect Lineup & Deliberation
+            <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 tracking-tight">
+              Vote for the Imposter
             </h2>
             <p className="text-xs text-slate-500 font-mono">
-              Cross-examine sketches & testimonies against the 3 leads. Identify the Imposter!
+              Review everyone's sketch & clues. Accuse the player whose clues do not match!
             </p>
           </div>
         </div>

@@ -438,8 +438,8 @@ export class GameManager {
     room.state = 'QUESTION_1';
     this.emitRoomState(room.code);
 
-    // Authoritative Server-Side Timer: 25s to answer Question 1
-    this.startTimer(room, 25, () => {
+    // Authoritative Server-Side Timer: 45s to answer Question 1 (+20s)
+    this.startTimer(room, 45, () => {
       console.log(`[Timer] QUESTION_1 expired for room ${room.code}. Auto-advancing.`);
       room.players.forEach(p => {
         if (!p.answers.q1) {
@@ -481,8 +481,8 @@ export class GameManager {
     room.state = 'QUESTION_2';
     this.emitRoomState(room.code);
 
-    // Authoritative Server-Side Timer: 25s to answer Question 2
-    this.startTimer(room, 25, () => {
+    // Authoritative Server-Side Timer: 45s to answer Question 2 (+20s)
+    this.startTimer(room, 45, () => {
       console.log(`[Timer] QUESTION_2 expired for room ${room.code}. Auto-advancing.`);
       room.players.forEach(p => {
         if (!p.answers.q2) {
@@ -504,8 +504,8 @@ export class GameManager {
     room.drawingElapsed = 0;
     this.emitRoomState(room.code);
 
-    // Authoritative Server-Side Timer: 45s to complete forensic sketch
-    this.startTimer(room, 45, () => {
+    // Authoritative Server-Side Timer: 75s to complete forensic sketch (+30s)
+    this.startTimer(room, 75, () => {
       console.log(`[Timer] DRAWING expired for room ${room.code}. Auto-submitting sketches.`);
       room.players.forEach((p, idx) => {
         if (!p.drawing) {

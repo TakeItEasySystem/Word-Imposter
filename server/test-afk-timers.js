@@ -47,8 +47,8 @@ async function testAfkTimers() {
   // 3. Transition to QUESTION_1
   gm.startQuestion1(room);
   assert.strictEqual(room.state, 'QUESTION_1');
-  assert.strictEqual(room.timerSeconds, 25, 'QUESTION_1 timer should be 25s');
-  console.log('✓ QUESTION_1 timer is 25s');
+  assert.strictEqual(room.timerSeconds, 45, 'QUESTION_1 timer should be 45s');
+  console.log('✓ QUESTION_1 timer is 45s');
 
   // Simulate Alice and Bob submitting answers, Charlie is AFK
   gm.submitAnswer(roomCode, 'player_1', 'q1', 'Alice answer');
@@ -74,8 +74,8 @@ async function testAfkTimers() {
 
   // 4. QUESTION_2 Timer check
   assert.strictEqual(room.state, 'QUESTION_2');
-  assert.strictEqual(room.timerSeconds, 25, 'QUESTION_2 timer should be 25s');
-  console.log('✓ QUESTION_2 timer is 25s');
+  assert.strictEqual(room.timerSeconds, 45, 'QUESTION_2 timer should be 45s');
+  console.log('✓ QUESTION_2 timer is 45s');
 
   // Simulate Q2 timer expiration for Charlie
   gm.submitAnswer(roomCode, 'player_1', 'q2', 'Alice answer 2');
@@ -93,8 +93,8 @@ async function testAfkTimers() {
 
   // 5. DRAWING Phase Timer check
   assert.strictEqual(room.state, 'DRAWING');
-  assert.strictEqual(room.timerSeconds, 45, 'DRAWING timer should be 45s');
-  console.log('✓ DRAWING timer is 45s');
+  assert.strictEqual(room.timerSeconds, 75, 'DRAWING timer should be 75s');
+  console.log('✓ DRAWING timer is 75s');
 
   // Alice and Bob submit drawings, Charlie is AFK
   gm.submitDrawing(roomCode, 'player_1', 'data:image/svg+xml;utf8,alice_sketch');
@@ -156,7 +156,7 @@ async function testAfkTimers() {
   gm.submitAnswer(roomCode, 'player_3', 'q1', 'Fast Charlie');
 
   assert.strictEqual(room.state, 'QUESTION_2', 'Should immediately advance to QUESTION_2');
-  console.log('✓ Early submission works: game advances immediately without waiting full 25s!');
+  console.log('✓ Early submission works: game advances immediately without waiting full 45s!');
 
   // Cleanup
   gm.clearRoomTimer(room);

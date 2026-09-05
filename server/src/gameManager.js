@@ -1,5 +1,6 @@
 import { getRandomWordSet } from './wordBank.js';
 import { generateWordTriplet } from './aiGenerator.js';
+import { sanitizeText, validateDrawingData, verifyHost, validateRoomCode } from './security.js';
 
 // Pre-built bot doodle drawings (vector canvas data / sample sketches) so bots can draw
 const BOT_DOODLES = [
@@ -16,6 +17,24 @@ export class GameManager {
   constructor(io) {
     this.io = io;
     this.rooms = new Map(); // roomCode -> roomData
+
+    // Automated Stale Room Garbage Collector (Runs every 10 minutes)
+    this.gcInterval = setInterval(() => this.cleanupStaleRooms(), 10 * 60 * 1000);
+  }
+
+  cleanupStaleRooms() {
+    const now = Date.now();
+    for (const [code, room] of this.rooms.entries()) {
+      const humanPlayers = room.players.filter(p => !p.isBot);
+      const isAbandoned = humanPlayers.length === 0;
+      const isExpired = (now - (room.lastActivity || room.createdAt || now)) > 2 * 60 * 60 * 1000; // 2 hours idle
+
+      if (isAbandoned || isExpired) {
+        console.log(`[GarbageCollector] 🧹 Cleaning up stale room ${code} (abandoned: ${isAbandoned}, expired: ${isExpired})`);
+        this.clearRoomTimer(room);
+        this.rooms.delete(code);
+      }
+    }
   }
 
   generateRoomCode() {
@@ -29,10 +48,13 @@ export class GameManager {
 
   createRoom(socket, playerName, avatar = "🦊") {
     const roomCode = this.generateRoomCode();
+    const safeName = sanitizeText(playerName, 20) || `Player 1`;
+    const safeAvatar = AVATARS.includes(avatar) ? avatar : "🦊";
+
     const player = {
       id: socket.id,
-      name: playerName || `Player 1`,
-      avatar: avatar || "🦊",
+      name: safeName,
+      avatar: safeAvatar,
       score: 0,
       isHost: true,
       isBot: false,
@@ -53,12 +75,15 @@ export class GameManager {
       totalRounds: 3,
       theme: 'Random Mix',
       players: [player],
-      chatMessages: [],
+      messages: [],
       roundData: null,
       drawingsRevealed: false,
       drawingElapsed: 0,
       timerSeconds: 0,
-      timerInterval: null
+      timerInterval: null,
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+      lastRoundStartTime: 0
     };
 
     this.rooms.set(roomCode, room);
@@ -70,9 +95,12 @@ export class GameManager {
   }
 
   joinRoom(socket, roomCode, playerName, avatar = "🐼") {
-    const code = roomCode.toUpperCase().trim();
-    const room = this.rooms.get(code);
+    const code = validateRoomCode(roomCode);
+    if (!code) {
+      return { success: false, error: "Invalid room code format!" };
+    }
 
+    const room = this.rooms.get(code);
     if (!room) {
       return { success: false, error: "Room not found!" };
     }
@@ -85,10 +113,13 @@ export class GameManager {
       return { success: false, error: "Room is full (max 8 players)!" };
     }
 
+    const safeName = sanitizeText(playerName, 20) || `Player ${room.players.length + 1}`;
+    const safeAvatar = AVATARS.includes(avatar) ? avatar : AVATARS[room.players.length % AVATARS.length];
+
     const player = {
       id: socket.id,
-      name: playerName || `Player ${room.players.length + 1}`,
-      avatar: avatar || AVATARS[room.players.length % AVATARS.length],
+      name: safeName,
+      avatar: safeAvatar,
       score: 0,
       isHost: false,
       isBot: false,
@@ -96,11 +127,13 @@ export class GameManager {
       assignedWord: null,
       answers: { q1: '', q2: '' },
       drawing: '',
+      isDrawingSubmitted: false,
       vote: null,
       ready: false
     };
 
     room.players.push(player);
+    room.lastActivity = Date.now();
     socket.join(code);
     socket.roomCode = code;
 
@@ -108,9 +141,13 @@ export class GameManager {
     return { success: true, roomCode: code };
   }
 
-  addBot(roomCode) {
+  addBot(roomCode, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.state !== 'LOBBY' || room.players.length >= 8) return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized add-bot attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
 
     const availableNames = BOT_NAMES.filter(n => !room.players.some(p => p.name === n));
     const botName = availableNames[Math.floor(Math.random() * availableNames.length)] || `Bot_${room.players.length + 1}`;
@@ -128,18 +165,26 @@ export class GameManager {
       assignedWord: null,
       answers: { q1: '', q2: '' },
       drawing: '',
+      isDrawingSubmitted: false,
       vote: null,
       ready: true
     };
 
     room.players.push(botPlayer);
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
   }
 
-  removeBot(roomCode, botId) {
+  removeBot(roomCode, botId, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.state !== 'LOBBY') return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized remove-bot attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
+
     room.players = room.players.filter(p => p.id !== botId);
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
   }
 
@@ -168,31 +213,57 @@ export class GameManager {
         room.hostId = firstHuman.id;
       }
 
+      room.lastActivity = Date.now();
       this.emitRoomState(roomCode);
     }
   }
 
-  updateSettings(roomCode, totalRounds) {
+  updateSettings(roomCode, totalRounds, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.state !== 'LOBBY') return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized update-settings attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
+
     room.totalRounds = Math.max(1, Math.min(10, parseInt(totalRounds) || 3));
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
   }
 
-  updateTheme(roomCode, theme) {
+  updateTheme(roomCode, theme, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.state !== 'LOBBY') return;
-    room.theme = (theme || 'Random Mix').trim() || 'Random Mix';
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized update-theme attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
+
+    room.theme = sanitizeText(theme, 60) || 'Random Mix';
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
   }
 
-  startGame(roomCode) {
+  startGame(roomCode, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized start-game attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
+
     if (room.players.length < 3) {
       this.io.to(roomCode).emit('error-msg', "At least 3 players required to start!");
       return;
     }
+
+    // Cooldown check between starting rounds (prevent spam)
+    const now = Date.now();
+    if (now - (room.lastRoundStartTime || 0) < 5000) {
+      return;
+    }
+    room.lastRoundStartTime = now;
+    room.lastActivity = now;
 
     room.currentRound = 1;
     this.startRound(room);
@@ -279,10 +350,20 @@ export class GameManager {
   submitAnswer(roomCode, socketId, questionKey, answer) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
+
+    // Verify valid questionKey and phase
+    if (questionKey === 'q1' && room.state !== 'QUESTION_1') return;
+    if (questionKey === 'q2' && room.state !== 'QUESTION_2') return;
+
     const player = room.players.find(p => p.id === socketId);
     if (!player) return;
 
-    player.answers[questionKey] = (answer || '').trim() || "(No answer submitted)";
+    // Lock answer: cannot re-submit or tamper with already answered question
+    if (player.answers[questionKey]) return;
+
+    const safeAnswer = sanitizeText(answer, 150) || "(No answer submitted)";
+    player.answers[questionKey] = safeAnswer;
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
     // If all submitted for Q1, advance early
@@ -317,22 +398,28 @@ export class GameManager {
 
   updateDrawing(roomCode, socketId, drawingData) {
     const room = this.rooms.get(roomCode);
-    if (!room) return;
+    if (!room || room.state !== 'DRAWING') return;
     const player = room.players.find(p => p.id === socketId);
     if (!player) return;
 
-    player.drawing = drawingData || '';
-    this.emitRoomState(roomCode);
+    // Validate drawing payload under 100KB without XSS/script injection
+    const safeData = validateDrawingData(drawingData);
+    player.drawing = safeData;
+    // NOTE: During DRAWING, drawings are private to the player.
+    // Do NOT broadcast emitRoomState on every stroke to prevent CPU/bandwidth saturation!
   }
 
   submitDrawing(roomCode, socketId, drawingData) {
     const room = this.rooms.get(roomCode);
-    if (!room) return;
+    if (!room || room.state !== 'DRAWING') return;
     const player = room.players.find(p => p.id === socketId);
     if (!player) return;
+    if (player.isDrawingSubmitted) return; // Prevent double submission
 
-    player.drawing = drawingData || player.drawing || '';
+    const safeData = validateDrawingData(drawingData);
+    player.drawing = safeData || player.drawing || '';
     player.isDrawingSubmitted = true;
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
     if (room.state === 'DRAWING' && room.players.every(p => p.isDrawingSubmitted)) {
@@ -368,10 +455,18 @@ export class GameManager {
     const voter = room.players.find(p => p.id === voterSocketId);
     if (!voter) return;
 
+    // Vote locking: cannot vote multiple times
+    if (voter.vote) return;
+
     // Cannot vote for self
     if (voterSocketId === targetPlayerId) return;
 
+    // Target must exist in room
+    const target = room.players.find(p => p.id === targetPlayerId);
+    if (!target) return;
+
     voter.vote = targetPlayerId;
+    room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
     // If all players voted, resolve early
@@ -464,9 +559,15 @@ export class GameManager {
     this.emitRoomState(room.code);
   }
 
-  nextRound(roomCode) {
+  nextRound(roomCode, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.state !== 'RESULTS') return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized next-round attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
+
+    room.lastActivity = Date.now();
 
     if (room.currentRound < room.totalRounds) {
       room.currentRound++;
@@ -483,8 +584,9 @@ export class GameManager {
     const player = room.players.find(p => p.id === socketId);
     if (!player) return;
 
-    const trimmed = (text || '').trim();
-    if (!trimmed) return;
+    // Sanitize chat message: strip HTML tags, control chars, cap at 150 chars
+    const sanitized = sanitizeText(text, 150);
+    if (!sanitized) return;
 
     const message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -492,7 +594,7 @@ export class GameManager {
       senderName: player.name,
       avatar: player.avatar,
       isBot: player.isBot,
-      text: trimmed,
+      text: sanitized,
       timestamp: Date.now()
     };
 
@@ -500,7 +602,7 @@ export class GameManager {
     if (room.messages.length > 80) {
       room.messages.shift();
     }
-
+    room.lastActivity = Date.now();
     this.io.to(roomCode).emit('new-chat-message', message);
   }
 
@@ -547,13 +649,18 @@ export class GameManager {
     }, delay);
   }
 
-  playAgain(roomCode) {
+  playAgain(roomCode, callerSocketId = null) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
+    if (callerSocketId && !verifyHost(room, callerSocketId)) {
+      console.warn(`[Security] Unauthorized play-again attempt by ${callerSocketId} in room ${roomCode}`);
+      return;
+    }
 
     room.state = 'LOBBY';
     room.currentRound = 0;
     room.roundData = null;
+    room.lastActivity = Date.now();
     room.players.forEach(p => {
       p.score = 0;
       p.role = null;

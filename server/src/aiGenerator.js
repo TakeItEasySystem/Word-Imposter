@@ -2,8 +2,10 @@ import { historyManager } from './historyManager.js';
 import { getRandomWordSet } from './wordBank.js';
 
 function getCleanApiKey() {
-  const candidateNames = [
+  const explicitCandidates = [
     'GEMINI_API_KEY',
+    'Gemini_API_Key',
+    'gemini_api_key',
     'GOOGLE_API_KEY',
     'GEMINI_KEY',
     'GOOGLE_GEMINI_API_KEY',
@@ -12,17 +14,28 @@ function getCleanApiKey() {
     'API_KEY'
   ];
 
-  for (const name of candidateNames) {
+  for (const name of explicitCandidates) {
     const val = process.env[name];
     if (val && typeof val === 'string' && val.trim()) {
-      return val.trim().replace(/^["']|["']$/g, '');
+      return val.trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
     }
   }
 
-  // Auto-scan all env variables in case of custom/different naming in Render
+  // Scan case-insensitively for any env var containing gemini or google_api
   for (const [k, v] of Object.entries(process.env)) {
     if (typeof v === 'string') {
-      const clean = v.trim().replace(/^["']|["']$/g, '');
+      const clean = v.trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
+      if (clean && (k.toLowerCase().includes('gemini') || k.toLowerCase().includes('google_api'))) {
+        console.log(`[AIGenerator] Found Gemini key under env var "${k}"`);
+        return clean;
+      }
+    }
+  }
+
+  // Auto-scan for key prefix formats (AIzaSy... or AQ....)
+  for (const [k, v] of Object.entries(process.env)) {
+    if (typeof v === 'string') {
+      const clean = v.trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
       if (clean.startsWith('AQ.') || clean.startsWith('AIzaSy')) {
         console.log(`[AIGenerator] Found Gemini key under env var "${k}"`);
         return clean;
@@ -44,16 +57,7 @@ function getAuthHeaders(apiKey) {
   return headers;
 }
 
-const CANDIDATE_MODELS = [
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-pro',
-  'gemini-pro'
-];
-
-let cachedAuthConfig = null; // { apiVersion, strategy, modelName }
+let cachedAuthConfig = null; // { apiVersion, strategy, modelName, allModels }
 
 async function getWorkingAuthConfig(apiKey, force = false) {
   if (!force && cachedAuthConfig) {
@@ -66,16 +70,98 @@ async function getWorkingAuthConfig(apiKey, force = false) {
     generationConfig: { maxOutputTokens: 5 }
   };
 
-  // 1. First probe proven, standard production models directly with testPing (:generateContent)
+  // 1. Dynamic Discovery: Query Google's Model Registry first to inspect authorized models for this key
   for (const v of versions) {
-    for (const m of CANDIDATE_MODELS) {
-      const endpoints = [
+    const endpoints = [
+      { name: 'Header', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, url: `https://generativelanguage.googleapis.com/${v}/models` },
+      { name: 'Query', headers: { 'Content-Type': 'application/json' }, url: `https://generativelanguage.googleapis.com/${v}/models?key=${encodeURIComponent(apiKey)}` },
+      { name: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, url: `https://generativelanguage.googleapis.com/${v}/models` }
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep.url, { headers: ep.headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.models)) {
+            const usable = data.models
+              .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace(/^models\//, ''));
+
+            console.log(`[AIGenerator] 📋 Google registry returned ${usable.length} models for ${v} (${ep.name}):`, usable.slice(0, 8));
+
+            if (usable.length > 0) {
+              // Sort candidates: modern flash models first (2.0-flash, flash-lite, 1.5-flash), then pro, then others
+              const sorted = [...usable].sort((a, b) => {
+                const aFlash = a.includes('flash') ? 1 : 0;
+                const bFlash = b.includes('flash') ? 1 : 0;
+                if (aFlash !== bFlash) return bFlash - aFlash;
+                const aTwo = (a.includes('2.0') || a.includes('2.5')) ? 1 : 0;
+                const bTwo = (b.includes('2.0') || b.includes('2.5')) ? 1 : 0;
+                return bTwo - aTwo;
+              });
+
+              // Test-ping models until we find one that successfully responds with HTTP 200
+              for (const candidate of sorted) {
+                const pingUrl = ep.name === 'Query'
+                  ? `https://generativelanguage.googleapis.com/${v}/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`
+                  : `https://generativelanguage.googleapis.com/${v}/models/${candidate}:generateContent`;
+
+                try {
+                  const pingRes = await fetch(pingUrl, {
+                    method: 'POST',
+                    headers: ep.headers,
+                    body: JSON.stringify(testPing)
+                  });
+
+                  if (pingRes.ok) {
+                    cachedAuthConfig = {
+                      apiVersion: v,
+                      strategy: ep.name,
+                      modelName: candidate,
+                      allModels: usable
+                    };
+                    console.log(`[AIGenerator] 🎯 Verified & locked working model "${candidate}" via ${v} (${ep.name})`);
+                    return cachedAuthConfig;
+                  } else {
+                    const pingErr = await pingRes.text().catch(() => '');
+                    console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping failed (${pingRes.status}): ${pingErr.slice(0, 100)}`);
+                  }
+                } catch (pingEx) {
+                  console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping network error: ${pingEx.message}`);
+                }
+              }
+            }
+          }
+        } else {
+          const regErr = await res.text().catch(() => '');
+          console.warn(`[AIGenerator] ⚠️ Registry query via ${v} (${ep.name}) failed (${res.status}): ${regErr.slice(0, 120)}`);
+        }
+      } catch (err) {
+        // Continue to next endpoint
+      }
+    }
+  }
+
+  // 2. Direct Fallback: Probe candidate models directly with testPing if registry was blocked
+  const fallbackCandidates = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-pro',
+    'gemini-pro'
+  ];
+
+  for (const v of versions) {
+    for (const m of fallbackCandidates) {
+      const directEndpoints = [
         { name: 'Header', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent` },
-        { name: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent` },
         { name: 'Query', headers: { 'Content-Type': 'application/json' }, url: `https://generativelanguage.googleapis.com/${v}/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}` }
       ];
 
-      for (const ep of endpoints) {
+      for (const ep of directEndpoints) {
         try {
           const res = await fetch(ep.url, {
             method: 'POST',
@@ -90,73 +176,14 @@ async function getWorkingAuthConfig(apiKey, force = false) {
               modelName: m,
               allModels: [m]
             };
-            console.log(`[AIGenerator] 🎯 Verified & locked working model "${m}" via ${v} (${ep.name})`);
+            console.log(`[AIGenerator] 🎯 Direct lock succeeded with model "${m}" via ${v} (${ep.name})`);
             return cachedAuthConfig;
           } else {
             const errBody = await res.text().catch(() => '');
-            if (res.status === 404) {
-              console.log(`[AIGenerator] ℹ️ Model "${m}" via ${v} (${ep.name}) unavailable (404), checking next candidate...`);
-            }
+            console.log(`[AIGenerator] ℹ️ Direct candidate "${m}" via ${v} (${ep.name}) failed (${res.status}): ${errBody.slice(0, 100)}`);
           }
-        } catch (err) {}
+        } catch (e) {}
       }
-    }
-  }
-
-  // 2. Fallback: query Google model registry, filter out deprecated 2.5/experimental models, and verify with testPing
-  for (const v of versions) {
-    const endpoints = [
-      { name: 'Header', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, url: `https://generativelanguage.googleapis.com/${v}/models` },
-      { name: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, url: `https://generativelanguage.googleapis.com/${v}/models` },
-      { name: 'Query', headers: { 'Content-Type': 'application/json' }, url: `https://generativelanguage.googleapis.com/${v}/models?key=${encodeURIComponent(apiKey)}` }
-    ];
-
-    for (const ep of endpoints) {
-      try {
-        const res = await fetch(ep.url, { headers: ep.headers });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data?.models)) {
-            const usable = data.models
-              .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-              .map(m => m.name.replace(/^models\//, ''))
-              .filter(m => !m.includes('2.5')); // Strictly exclude deprecated gemini-2.5-flash
-
-            // Sort so 1.5-flash and 2.0-flash are tested first
-            usable.sort((a, b) => {
-              if (a.includes('1.5-flash')) return -1;
-              if (b.includes('1.5-flash')) return 1;
-              if (a.includes('2.0-flash')) return -1;
-              if (b.includes('2.0-flash')) return 1;
-              return 0;
-            });
-
-            for (const candidate of usable) {
-              const pingUrl = ep.name === 'Query'
-                ? `https://generativelanguage.googleapis.com/${v}/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`
-                : `https://generativelanguage.googleapis.com/${v}/models/${candidate}:generateContent`;
-
-              try {
-                const pingRes = await fetch(pingUrl, {
-                  method: 'POST',
-                  headers: ep.headers,
-                  body: JSON.stringify(testPing)
-                });
-                if (pingRes.ok) {
-                  cachedAuthConfig = {
-                    apiVersion: v,
-                    strategy: ep.name,
-                    modelName: candidate,
-                    allModels: usable
-                  };
-                  console.log(`[AIGenerator] 🎯 Discovered & verified working model "${candidate}" via ${v} (${ep.name})`);
-                  return cachedAuthConfig;
-                }
-              } catch (e) {}
-            }
-          }
-        }
-      } catch (err) {}
     }
   }
 

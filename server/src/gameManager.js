@@ -196,8 +196,12 @@ export class GameManager {
     if (!room) return;
 
     const playerIndex = room.players.findIndex(p => p.id === socket.id);
-    if (playerIndex !== -1) {
-      const isHost = room.players[playerIndex].isHost;
+    if (playerIndex === -1) return;
+
+    const player = room.players[playerIndex];
+    const isHost = player.isHost;
+
+    if (room.state === 'LOBBY') {
       room.players.splice(playerIndex, 1);
 
       if (room.players.length === 0 || room.players.every(p => p.isBot)) {
@@ -207,7 +211,6 @@ export class GameManager {
       }
 
       if (isHost && room.players.length > 0) {
-        // Assign new host to the first human player
         const firstHuman = room.players.find(p => !p.isBot) || room.players[0];
         firstHuman.isHost = true;
         room.hostId = firstHuman.id;
@@ -215,7 +218,96 @@ export class GameManager {
 
       room.lastActivity = Date.now();
       this.emitRoomState(roomCode);
+    } else {
+      // IN ACTIVE GAME: DO NOT DELETE THE PLAYER!
+      // Keep their role, assigned word, and suspect card so the case remains 100% playable.
+      player.isDisconnected = true;
+      player.disconnectedAt = Date.now();
+
+      console.log(`[Disconnect] Player ${player.name} (${socket.id}) disconnected mid-game. Auto-pilot activated.`);
+      this.sendSystemMessage(roomCode, `📢 ${player.name} disconnected. Game continues automatically!`);
+
+      // If host disconnected, transfer host to next active human
+      if (isHost) {
+        const nextHuman = room.players.find(p => !p.isDisconnected && !p.id.startsWith('bot_'));
+        if (nextHuman) {
+          player.isHost = false;
+          nextHuman.isHost = true;
+          room.hostId = nextHuman.id;
+          this.sendSystemMessage(roomCode, `👑 ${nextHuman.name} is now the Lead Detective!`);
+        }
+      }
+
+      // Auto-fill missing actions so the disconnected player never blocks the remaining players
+      if (room.state === 'WORD_REVEAL') {
+        player.ready = true;
+      } else if (room.state === 'QUESTION_1' && !player.answers.q1) {
+        player.answers.q1 = "(Detective disconnected)";
+      } else if (room.state === 'QUESTION_2' && !player.answers.q2) {
+        player.answers.q2 = "(Detective disconnected)";
+      } else if (room.state === 'DRAWING' && !player.isDrawingSubmitted) {
+        player.drawing = BOT_DOODLES[playerIndex % BOT_DOODLES.length];
+        player.isDrawingSubmitted = true;
+      } else if (room.state === 'VOTING' && !player.vote) {
+        const eligible = room.players.filter(t => t.id !== player.id);
+        if (eligible.length > 0) {
+          player.vote = eligible[Math.floor(Math.random() * eligible.length)].id;
+        }
+      }
+
+      // Check if ALL human players have disconnected
+      const anyHumanConnected = room.players.some(p => !p.isDisconnected && !p.id.startsWith('bot_'));
+      if (!anyHumanConnected) {
+        console.log(`[Room] All human players disconnected from active room ${roomCode}. Cleaning up.`);
+        this.clearRoomTimer(room);
+        this.rooms.delete(roomCode);
+        return;
+      }
+
+      // Check if current phase can now advance immediately!
+      this.checkAndAdvancePhase(room);
+
+      room.lastActivity = Date.now();
+      this.emitRoomState(roomCode);
     }
+  }
+
+  reconnectPlayer(socket, roomCode, playerId, playerName) {
+    const code = validateRoomCode(roomCode);
+    if (!code) return { success: false, error: "Invalid room code format" };
+    const room = this.rooms.get(code);
+    if (!room) return { success: false, error: "Room no longer active" };
+
+    let player = room.players.find(p => p.id === playerId);
+    if (!player && playerName) {
+      player = room.players.find(p => p.name === playerName && p.isDisconnected);
+    }
+
+    if (!player) {
+      if (room.state === 'LOBBY') {
+        return this.joinRoom(socket, code, playerName);
+      }
+      return { success: false, error: "Session expired" };
+    }
+
+    const oldId = player.id;
+    player.id = socket.id;
+    player.isDisconnected = false;
+
+    if (room.roundData && room.roundData.imposterId === oldId) {
+      room.roundData.imposterId = socket.id;
+    }
+    if (player.isHost) {
+      room.hostId = socket.id;
+    }
+
+    socket.join(code);
+    socket.roomCode = code;
+
+    console.log(`[Reconnect] Player ${player.name} reconnected with socket ${socket.id}`);
+    this.sendSystemMessage(code, `⚡ ${player.name} reconnected to the case!`);
+    this.emitRoomState(code);
+    return { success: true, roomCode: code };
   }
 
   updateSettings(roomCode, totalRounds, callerSocketId = null) {
@@ -316,6 +408,13 @@ export class GameManager {
     room.state = 'WORD_REVEAL';
     this.emitRoomState(room.code);
 
+    // Authoritative Server-Side Timer: 15s to view secret dossier
+    this.startTimer(room, 15, () => {
+      console.log(`[Timer] WORD_REVEAL expired for room ${room.code}. Auto-advancing.`);
+      room.players.forEach(p => { p.ready = true; });
+      this.startQuestion1(room);
+    });
+
     // Bots auto-ready
     room.players.filter(p => p.isBot).forEach(bot => {
       setTimeout(() => {
@@ -332,16 +431,25 @@ export class GameManager {
 
     player.ready = true;
     this.emitRoomState(roomCode);
-
-    if (room.players.every(p => p.ready)) {
-      this.clearRoomTimer(room);
-      this.startQuestion1(room);
-    }
+    this.checkAndAdvancePhase(room);
   }
 
   startQuestion1(room) {
     room.state = 'QUESTION_1';
     this.emitRoomState(room.code);
+
+    // Authoritative Server-Side Timer: 40s to answer Question 1
+    this.startTimer(room, 40, () => {
+      console.log(`[Timer] QUESTION_1 expired for room ${room.code}. Auto-advancing.`);
+      room.players.forEach(p => {
+        if (!p.answers.q1) {
+          p.answers.q1 = p.isBot
+            ? this.generateBotAnswer(p.assignedWord, 'q1', room.roundData?.questions)
+            : "(Detective submitted subtle classified testimony)";
+        }
+      });
+      this.startQuestion2(room);
+    });
 
     // Handle bot submissions
     this.scheduleBotAnswers(room, 'q1', 2000, 5000);
@@ -366,21 +474,25 @@ export class GameManager {
     room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
-    // If all submitted for Q1, advance early
-    if (room.state === 'QUESTION_1' && room.players.every(p => p.answers.q1)) {
-      this.clearRoomTimer(room);
-      this.startQuestion2(room);
-    }
-    // If all submitted for Q2, advance early
-    else if (room.state === 'QUESTION_2' && room.players.every(p => p.answers.q2)) {
-      this.clearRoomTimer(room);
-      this.startDrawingPhase(room);
-    }
+    this.checkAndAdvancePhase(room);
   }
 
   startQuestion2(room) {
     room.state = 'QUESTION_2';
     this.emitRoomState(room.code);
+
+    // Authoritative Server-Side Timer: 40s to answer Question 2
+    this.startTimer(room, 40, () => {
+      console.log(`[Timer] QUESTION_2 expired for room ${room.code}. Auto-advancing.`);
+      room.players.forEach(p => {
+        if (!p.answers.q2) {
+          p.answers.q2 = p.isBot
+            ? this.generateBotAnswer(p.assignedWord, 'q2', room.roundData?.questions)
+            : "(Detective submitted subtle classified testimony)";
+        }
+      });
+      this.startDrawingPhase(room);
+    });
 
     // Schedule bot submissions
     this.scheduleBotAnswers(room, 'q2', 2000, 5000);
@@ -391,6 +503,18 @@ export class GameManager {
     room.drawingsRevealed = false;
     room.drawingElapsed = 0;
     this.emitRoomState(room.code);
+
+    // Authoritative Server-Side Timer: 50s to complete forensic sketch
+    this.startTimer(room, 50, () => {
+      console.log(`[Timer] DRAWING expired for room ${room.code}. Auto-submitting sketches.`);
+      room.players.forEach((p, idx) => {
+        if (!p.drawing) {
+          p.drawing = BOT_DOODLES[idx % BOT_DOODLES.length];
+        }
+        p.isDrawingSubmitted = true;
+      });
+      this.startVotingPhase(room);
+    });
 
     // Schedule bot drawings to complete within 2-4 seconds
     this.scheduleBotDrawings(room);
@@ -422,10 +546,7 @@ export class GameManager {
     room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
-    if (room.state === 'DRAWING' && room.players.every(p => p.isDrawingSubmitted)) {
-      this.clearRoomTimer(room);
-      this.startVotingPhase(room);
-    }
+    this.checkAndAdvancePhase(room);
   }
 
   startVotingPhase(room) {
@@ -438,6 +559,20 @@ export class GameManager {
 
     room.state = 'VOTING';
     this.emitRoomState(room.code);
+
+    // Authoritative Server-Side Timer: 45s for Voting Tribunal
+    this.startTimer(room, 45, () => {
+      console.log(`[Timer] VOTING expired for room ${room.code}. Auto-resolving votes.`);
+      room.players.forEach(p => {
+        if (!p.vote) {
+          const eligible = room.players.filter(t => t.id !== p.id);
+          if (eligible.length > 0) {
+            p.vote = eligible[Math.floor(Math.random() * eligible.length)].id;
+          }
+        }
+      });
+      this.resolveVotes(room);
+    });
 
     // Schedule bot chat banter during voting
     room.players.filter(p => p.isBot).forEach((bot, i) => {
@@ -469,10 +604,42 @@ export class GameManager {
     room.lastActivity = Date.now();
     this.emitRoomState(roomCode);
 
-    // If all players voted, resolve early
-    if (room.players.every(p => p.vote)) {
-      this.clearRoomTimer(room);
-      this.resolveVotes(room);
+    this.checkAndAdvancePhase(room);
+  }
+
+  checkAndAdvancePhase(room) {
+    if (!room) return;
+
+    if (room.state === 'WORD_REVEAL') {
+      const activePlayers = room.players.filter(p => !p.isDisconnected);
+      if (activePlayers.length > 0 && activePlayers.every(p => p.ready)) {
+        this.clearRoomTimer(room);
+        this.startQuestion1(room);
+      }
+    } else if (room.state === 'QUESTION_1') {
+      const activePlayers = room.players.filter(p => !p.isDisconnected);
+      if (activePlayers.length > 0 && activePlayers.every(p => !!p.answers.q1)) {
+        this.clearRoomTimer(room);
+        this.startQuestion2(room);
+      }
+    } else if (room.state === 'QUESTION_2') {
+      const activePlayers = room.players.filter(p => !p.isDisconnected);
+      if (activePlayers.length > 0 && activePlayers.every(p => !!p.answers.q2)) {
+        this.clearRoomTimer(room);
+        this.startDrawingPhase(room);
+      }
+    } else if (room.state === 'DRAWING') {
+      const activePlayers = room.players.filter(p => !p.isDisconnected);
+      if (activePlayers.length > 0 && activePlayers.every(p => !!p.isDrawingSubmitted)) {
+        this.clearRoomTimer(room);
+        this.startVotingPhase(room);
+      }
+    } else if (room.state === 'VOTING') {
+      const activePlayers = room.players.filter(p => !p.isDisconnected);
+      if (activePlayers.length > 0 && activePlayers.every(p => !!p.vote)) {
+        this.clearRoomTimer(room);
+        this.resolveVotes(room);
+      }
     }
   }
 
@@ -557,6 +724,16 @@ export class GameManager {
     room.roundData.totalBountyPool = totalBountyPool;
     room.state = 'RESULTS';
     this.emitRoomState(room.code);
+
+    if (room.currentRound < room.totalRounds) {
+      // Authoritative Server-Side Timer: 30s to view case verdict before next case begins
+      this.startTimer(room, 30, () => {
+        if (room.state === 'RESULTS') {
+          console.log(`[Timer] RESULTS expired for room ${room.code}. Auto-advancing to next round.`);
+          this.nextRound(room.code);
+        }
+      });
+    }
   }
 
   nextRound(roomCode, callerSocketId = null) {
@@ -567,6 +744,7 @@ export class GameManager {
       return;
     }
 
+    this.clearRoomTimer(room);
     room.lastActivity = Date.now();
 
     if (room.currentRound < room.totalRounds) {

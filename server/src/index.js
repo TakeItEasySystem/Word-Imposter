@@ -129,6 +129,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Reconnect Session (Restores a player who refreshed or returned from background)
+  socket.on('reconnect-session', ({ roomCode, playerId, playerName }) => {
+    try {
+      const result = gameManager.reconnectPlayer(socket, roomCode, playerId, playerName);
+      if (!result.success) {
+        socket.emit('reconnect-failed', result.error);
+      }
+    } catch (err) {
+      console.error('[Error] reconnect-session:', err);
+      socket.emit('reconnect-failed', 'Failed to restore session.');
+    }
+  });
+
   // Add Bot (Host verified)
   socket.on('add-bot', ({ roomCode }) => {
     gameManager.addBot(roomCode, socket.id);

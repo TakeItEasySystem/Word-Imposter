@@ -22,6 +22,31 @@ export default function App() {
     // Socket event listeners
     const handleGameState = (state) => {
       setGameState(state);
+      if (state && state.code && state.myPlayerId) {
+        const myPlayer = state.players?.find(p => p.id === state.myPlayerId);
+        sessionStorage.setItem('wi_session', JSON.stringify({
+          roomCode: state.code,
+          playerId: state.myPlayerId,
+          playerName: myPlayer?.name || ''
+        }));
+      }
+    };
+
+    const handleConnect = () => {
+      const saved = sessionStorage.getItem('wi_session');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.roomCode) {
+            console.log('[App] Attempting session recovery for room', parsed.roomCode);
+            socket.emit('reconnect-session', parsed);
+          }
+        } catch (err) {}
+      }
+    };
+
+    const handleReconnectFailed = () => {
+      sessionStorage.removeItem('wi_session');
     };
 
     const handleTimerUpdate = ({ secondsLeft, phase }) => {
@@ -36,11 +61,20 @@ export default function App() {
       setTimeout(() => setErrorMsg(null), 4000);
     };
 
+    socket.on('connect', handleConnect);
+    socket.on('reconnect-failed', handleReconnectFailed);
     socket.on('game-state', handleGameState);
     socket.on('timer-update', handleTimerUpdate);
     socket.on('error-msg', handleErrorMsg);
 
+    // If already connected when App mounts
+    if (socket.connected) {
+      handleConnect();
+    }
+
     return () => {
+      socket.off('connect', handleConnect);
+      socket.off('reconnect-failed', handleReconnectFailed);
       socket.off('game-state', handleGameState);
       socket.off('timer-update', handleTimerUpdate);
       socket.off('error-msg', handleErrorMsg);

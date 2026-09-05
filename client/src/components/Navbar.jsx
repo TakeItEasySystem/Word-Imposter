@@ -61,6 +61,18 @@ export default function Navbar({ gameState, onOpenRules }) {
                 ROUND {gameState.currentRound}/{gameState.totalRounds}
               </div>
             )}
+
+            {gameState.state !== 'LOBBY' && gameState.timerSeconds > 0 && (
+              <div className={`px-3 py-1.5 rounded-xl text-xs font-mono font-black flex items-center space-x-1.5 transition shrink-0 ${
+                gameState.timerSeconds <= 5 
+                  ? 'bg-red-600 text-white animate-pulse shadow-md' 
+                  : gameState.timerSeconds <= 10
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                  : 'bg-slate-100 text-slate-800 border border-slate-300'
+              }`}>
+                <span>⏱️ {gameState.timerSeconds}s</span>
+              </div>
+            )}
           </div>
         )}
 

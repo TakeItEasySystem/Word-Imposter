@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GameManager } from './gameManager.js';
-import { checkGeminiStatus } from './aiGenerator.js';
+import { checkGeminiStatus, generateWordTriplet } from './aiGenerator.js';
 import { socketRateLimiter, validateRoomCode } from './security.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -79,8 +79,28 @@ app.get('/api/check-ai', async (req, res) => {
   res.json(gemini);
 });
 
+// Live test AI generation with custom theme
+app.get('/api/test-ai', async (req, res) => {
+  const theme = (req.query.theme || 'Marvel Superheroes').toString();
+  try {
+    const triplet = await generateWordTriplet(theme);
+    const gemini = await checkGeminiStatus(false);
+    res.json({
+      success: true,
+      requestedTheme: theme,
+      triplet,
+      geminiStatus: gemini
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 app.get('*', (req, res, next) => {
-  if (req.path === '/health' || req.path === '/api/check-ai') return next();
+  if (req.path === '/health' || req.path.startsWith('/api/')) return next();
   res.sendFile(path.join(clientDistPath, 'index.html'), (err) => {
     if (err) next();
   });

@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "start": "concurrently \"npm --prefix server start\" \"npm --prefix client run dev\"",
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
     "build": "cd client && npm install && npx --yes vite build",
     "postinstall": "cd client && npm install",
     "server": "npm --prefix server start",

@@ -377,6 +377,7 @@ Respond with ONLY valid JSON:
       generationConfig: {
         temperature: 0.9,
         topP: 0.95,
+        maxOutputTokens: 300,
         responseMimeType: 'application/json'
       }
     };
@@ -388,7 +389,7 @@ Respond with ONLY valid JSON:
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(20000)
       });
 
       // If model returned 400 complaining about responseMimeType, retry once without it
@@ -400,7 +401,7 @@ Respond with ONLY valid JSON:
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(10000)
+            signal: AbortSignal.timeout(20000)
           });
         }
       }

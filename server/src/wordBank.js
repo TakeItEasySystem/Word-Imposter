@@ -929,6 +929,22 @@ export const WORD_SETS = [
     ]
   },
   {
+    category: "Arijit Singh Songs",
+    words: ["Tum Hi Ho", "Channa Mereya", "Kesariya"],
+    questions: [
+      "In which blockbuster movie did this soulful romantic track become an anthem of love or heartbreak?",
+      "What emotional vocal texture, acoustic guitar melody, or rain visual defines this song?"
+    ]
+  },
+  {
+    category: "Indian Playback Singers",
+    words: ["Arijit Singh", "Shreya Ghoshal", "Atif Aslam"],
+    questions: [
+      "What signature vocal range (soulful rasp, melodious classical sweetness, or high-pitch belting) is their trademark?",
+      "What legendary romantic Bollywood ballad made their voice recognized in every household?"
+    ]
+  },
+  {
     category: "Tech Giants",
     words: ["Google", "Apple", "Microsoft"],
     questions: [
@@ -1102,7 +1118,7 @@ export function getRandomWordSet(theme = null) {
     console.warn(`[WordBank] ⚠️ No offline decks matched theme "${theme}". Using random unused deck.`);
     const chosen = masterPool[Math.floor(Math.random() * masterPool.length)];
     return {
-      category: theme,
+      category: chosen.category,
       words: chosen.words,
       questions: chosen.questions
     };

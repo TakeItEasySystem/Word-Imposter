@@ -981,7 +981,9 @@ export const FALLBACK_QUESTIONS = [
 // Stop words to ignore when tokenizing user themes
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'with',
-  'by', 'about', 'like', 'through', 'over', 'before', 'after', 'all', 'any', 'is', 'are'
+  'by', 'about', 'like', 'through', 'over', 'before', 'after', 'all', 'any', 'is', 'are',
+  'movie', 'movies', 'film', 'films', 'song', 'songs', 'game', 'games', 'character', 'characters',
+  'thing', 'things', 'item', 'items', 'type', 'types', 'kind', 'kinds'
 ]);
 
 function normalizeStem(word) {

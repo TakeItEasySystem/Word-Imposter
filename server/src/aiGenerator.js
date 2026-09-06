@@ -133,7 +133,7 @@ async function getWorkingAuthConfig(apiKey, force = false) {
                     method: 'POST',
                     headers: ep.headers,
                     body: JSON.stringify(testPing),
-                    signal: AbortSignal.timeout(7000)
+                    signal: AbortSignal.timeout(12000)
                   });
 
                   if (pingRes.ok) {
@@ -147,10 +147,14 @@ async function getWorkingAuthConfig(apiKey, force = false) {
                     return cachedAuthConfig;
                   } else {
                     const pingErr = await pingRes.text().catch(() => '');
-                    console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping failed (${pingRes.status}): ${pingErr.slice(0, 100)}`);
+                    if (pingRes.status === 429) {
+                      console.log(`[AIGenerator] ℹ️ Model "${candidate}" quota reached (429). Auto-checking next model in registry...`);
+                    } else {
+                      console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping returned ${pingRes.status}: ${pingErr.slice(0, 100)}`);
+                    }
                   }
                 } catch (pingEx) {
-                  console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping network error: ${pingEx.message}`);
+                  console.log(`[AIGenerator] ℹ️ Model "${candidate}" ping network note: ${pingEx.message}`);
                 }
               }
             }
@@ -437,14 +441,17 @@ Respond with ONLY valid JSON:
         const errText = await response.text().catch(() => '');
         console.warn(`[AIGenerator] Model (${modelToUse}) HTTP ${response.status}: ${errText.slice(0, 150)}`);
         if (response.status === 429) {
-          tripCircuitBreaker(30);
-          break; // Stop trying other models if Google quota is rate-limited
+          console.warn(`[AIGenerator] ℹ️ Model (${modelToUse}) hit rate/quota limit. Trying next candidate model in queue...`);
+          continue; // Seamlessly failover to the next candidate model
         }
       }
     } catch (err) {
       console.warn(`[AIGenerator] Model (${modelToUse}) request error: ${err.message}`);
     }
   }
+
+  // If all candidate models were exhausted or failed, trip a short circuit breaker
+  tripCircuitBreaker(30);
 
   // Invalidate cached config so next attempt re-probes
   cachedAuthConfig = null;

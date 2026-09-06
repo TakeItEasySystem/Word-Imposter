@@ -905,6 +905,30 @@ export const WORD_SETS = [
     ]
   },
   {
+    category: "Salman Khan Movies",
+    words: ["Bajrangi Bhaijaan", "Dabangg", "Sultan"],
+    questions: [
+      "In this blockbuster movie, does Salman Khan play a wrestling champ, a fearless cop, or a devotee on a rescue mission?",
+      "What signature action stunt, aviator sunglasses, or iconic dance step is celebrated in this film?"
+    ]
+  },
+  {
+    category: "Shah Rukh Khan Movies",
+    words: ["Dilwale Dulhania Le Jayenge", "Chak De! India", "Jawan"],
+    questions: [
+      "Does King Khan play a hockey coach with 70 minutes, a romantic lover in Switzerland, or a masked metro hero?",
+      "What iconic dialogue, whistle theme, or stadium trophy celebration defines this film?"
+    ]
+  },
+  {
+    category: "Aamir Khan Movies",
+    words: ["3 Idiots", "Dangal", "Lagaan"],
+    questions: [
+      "Is this masterpiece centered on college engineering pressure, wrestling gold medals in Haryana, or cricket against the British?",
+      "What inspirational life lesson or climax match had audiences cheering across the nation?"
+    ]
+  },
+  {
     category: "Tech Giants",
     words: ["Google", "Apple", "Microsoft"],
     questions: [
@@ -1069,7 +1093,7 @@ export function getRandomWordSet(theme = null) {
 
       console.log(`[WordBank] 🎯 Matched theme "${theme}" to deck "${chosen.category}" (Score: ${maxScore}, Words: ${chosen.words.join(', ')})`);
       return {
-        category: chosen.category,
+        category: theme,
         words: chosen.words,
         questions: chosen.questions
       };
@@ -1078,7 +1102,7 @@ export function getRandomWordSet(theme = null) {
     console.warn(`[WordBank] ⚠️ No offline decks matched theme "${theme}". Using random unused deck.`);
     const chosen = masterPool[Math.floor(Math.random() * masterPool.length)];
     return {
-      category: chosen.category,
+      category: theme,
       words: chosen.words,
       questions: chosen.questions
     };

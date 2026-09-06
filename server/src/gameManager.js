@@ -400,8 +400,12 @@ export class GameManager {
         }
       });
 
+      const displayCategory = (room.theme && room.theme !== 'Random Mix' && room.theme !== 'Random Surprise')
+        ? room.theme
+        : (wordSet.category || 'Investigation');
+
       room.roundData = {
-        category: wordSet.category || room.theme || 'Investigation',
+        category: displayCategory,
         candidateWords: shuffledWords, // 3 visible words to EVERYONE
         commonWord: commonWord,
         imposterWord: imposterWord,
